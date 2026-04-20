@@ -1,0 +1,333 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  password      String?
+  name          String?
+  image         String?
+  role          UserRole  @default(USER)
+  status        UserStatus @default(ACTIVE)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Organizer relation
+  organizer     Organizer?
+
+  // Customer relations
+  orders        Order[]
+  tickets       Ticket[]
+  passwordResets PasswordReset[]
+
+  @@map("users")
+}
+
+model Organizer {
+  id          String          @id @default(cuid())
+  userId      String          @unique
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Organization details
+  companyName     String
+  companyEmail    String
+  companyPhone    String?
+  taxNumber       String?
+  website         String?
+  description     String?
+  logo            String?
+  
+  // Address
+  address         String?
+  city            String?
+  country         String?
+  postalCode      String?
+  
+  // Approval status
+  status          OrganizerStatus @default(PENDING)
+  approvedAt      DateTime?
+  approvedBy      String?
+  rejectionReason String?
+  
+  // Relations
+  halls           Hall[]
+  events          Event[]
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@map("organizers")
+}
+
+model Hall {
+  id            String    @id @default(cuid())
+  organizerId   String
+  organizer     Organizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+
+  name          String
+  description   String?
+  address       String?
+  capacity      Int       @default(0)
+
+  // Stage/Canvas configuration
+  stageWidth    Int       @default(800)
+  stageHeight   Int       @default(600)
+
+  // SVG import fields
+  svgSource     String?   // Store original SVG content
+  source        String    @default("manual") // "manual" or "svg"
+
+  // Relations
+  seats         Seat[]
+  events        Event[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("halls")
+}
+
+model Seat {
+  id          String    @id @default(cuid())
+  hallId      String
+  hall        Hall      @relation(fields: [hallId], references: [id], onDelete: Cascade)
+  
+  // Position on canvas
+  x           Int
+  y           Int
+  
+  // Seat properties
+  row         String
+  number      String
+  type        SeatType  @default(NORMAL)
+  
+  // Visual properties
+  width       Int       @default(30)
+  height      Int       @default(30)
+  shape       String    @default("circle") // circle, rect
+  rotation    Int       @default(0)
+
+  // SVG import reference
+  svgId       String?   // Original SVG element ID
+
+  // Relations
+  tickets     Ticket[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([hallId, row, number])
+  @@map("seats")
+}
+
+model Event {
+  id            String    @id @default(cuid())
+  organizerId   String
+  organizer     Organizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  
+  hallId        String?
+  hall          Hall?     @relation(fields: [hallId], references: [id])
+  
+  // Event details
+  title         String
+  slug          String    @unique
+  description   String?
+  image         String?
+  category      String?
+  
+  // Date and time
+  startDate     DateTime
+  endDate       DateTime?
+  doorsOpen     DateTime?
+  
+  // Status
+  status        EventStatus @default(DRAFT)
+  isPublished   Boolean   @default(false)
+  publishedAt   DateTime?
+  
+  // Relations
+  ticketCategories TicketCategory[]
+  orders        Order[]
+  tickets       Ticket[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("events")
+}
+
+model TicketCategory {
+  id          String    @id @default(cuid())
+  eventId     String
+  event       Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  name        String
+  description String?
+  price       Float
+  
+  // Capacity
+  totalQuantity   Int
+  availableQuantity Int
+  
+  // Seat selection
+  hasSeatSelection Boolean @default(false)
+  seatType      SeatType?
+  color         String    @default("#3b82f6")
+  
+  // Sales period
+  salesStart    DateTime?
+  salesEnd      DateTime?
+  
+  // Relations
+  tickets     Ticket[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("ticket_categories")
+}
+
+model Order {
+  id          String    @id @default(cuid())
+  orderNumber String    @unique
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  
+  eventId     String
+  event       Event     @relation(fields: [eventId], references: [id])
+  
+  // Order details
+  status      OrderStatus @default(PENDING)
+  totalAmount Float
+  
+  // Platform commission
+  platformFee Float     @default(0)
+  organizerAmount Float
+  
+  // Customer info
+  customerEmail   String
+  customerName    String?
+  customerPhone   String?
+  
+  // Payment
+  paymentMethod   String?
+  paymentStatus   PaymentStatus @default(PENDING)
+  paidAt          DateTime?
+  
+  // Relations
+  tickets     Ticket[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("orders")
+}
+
+model Ticket {
+  id          String    @id @default(cuid())
+  ticketNumber String   @unique
+  
+  orderId     String
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  eventId     String
+  event       Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  categoryId  String
+  category    TicketCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  seatId      String?
+  seat        Seat?     @relation(fields: [seatId], references: [id])
+  
+  // Ticket status
+  status      TicketStatus @default(ACTIVE)
+  checkedInAt DateTime?
+  
+  // Price at purchase
+  price       Float
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("tickets")
+}
+
+model PasswordReset {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  token       String    @unique
+  expiresAt   DateTime
+  usedAt      DateTime?
+  
+  createdAt   DateTime  @default(now())
+
+  @@map("password_resets")
+}
+
+// Enums
+enum UserRole {
+  USER
+  ORGANIZER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum OrganizerStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum SeatType {
+  NORMAL
+  VIP
+  ACCESSIBLE
+  PREMIUM
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum TicketStatus {
+  ACTIVE
+  USED
+  CANCELLED
+  REFUNDED
+}
