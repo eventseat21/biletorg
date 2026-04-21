@@ -1,7 +1,8 @@
 {
-  "/login/page": "app/login/page.js",
-  "/saalplan/page": "app/saalplan/page.js",
+  "/faq/page": "app/faq/page.js",
+  "/page": "app/page.js",
   "/ticketshop/page": "app/ticketshop/page.js",
-  "/pricing/page": "app/pricing/page.js",
-  "/events/page": "app/events/page.js"
+  "/login/page": "app/login/page.js",
+  "/events/page": "app/events/page.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js"
 }

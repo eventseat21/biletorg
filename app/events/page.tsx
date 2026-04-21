@@ -1,6 +1,10 @@
 import { prisma } from '@/lib/prisma'
+import { Ticket } from 'lucide-react'
 import Link from 'next/link'
-import { Calendar, MapPin, Ticket } from 'lucide-react'
+import Image from 'next/image'
+import { formatPrice } from '@/lib/utils'
+import MobileNav from '@/components/mobile-nav'
+import { Calendar, MapPin } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,6 +61,7 @@ export default async function EventsPage() {
               <Link href="/login" className="text-gray-600 hover:text-gray-900">Giriş Yap</Link>
               <Link href="/organizer/register" className="px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 text-sm font-medium">Başla</Link>
             </div>
+            <MobileNav />
           </div>
         </div>
       </nav>

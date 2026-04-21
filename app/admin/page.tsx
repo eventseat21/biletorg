@@ -1,27 +1,41 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic'
+
 async function getAdminStats() {
-  const [totalUsers, totalOrganizers, totalEvents, totalTickets, pendingApprovals] = await Promise.all([
-    prisma.user.count(),
-    prisma.organizer.count(),
-    prisma.event.count(),
-    prisma.ticket.count(),
-    prisma.organizer.count({ where: { status: 'PENDING' } })
-  ])
+  try {
+    const [totalUsers, totalOrganizers, totalEvents, totalTickets, pendingApprovals] = await Promise.all([
+      prisma.user.count(),
+      prisma.organizer.count(),
+      prisma.event.count(),
+      prisma.ticket.count(),
+      prisma.organizer.count({ where: { status: 'PENDING' } })
+    ])
 
-  const revenue = await prisma.order.aggregate({
-    where: { paymentStatus: 'COMPLETED' },
-    _sum: { totalAmount: true }
-  })
+    const revenue = await prisma.order.aggregate({
+      where: { paymentStatus: 'COMPLETED' },
+      _sum: { totalAmount: true }
+    })
 
-  return {
-    totalUsers,
-    totalOrganizers,
-    totalEvents,
-    totalTickets,
-    pendingApprovals,
-    totalRevenue: revenue._sum.totalAmount || 0
+    return {
+      totalUsers,
+      totalOrganizers,
+      totalEvents,
+      totalTickets,
+      pendingApprovals,
+      totalRevenue: revenue._sum.totalAmount || 0
+    }
+  } catch (error) {
+    console.error('Error fetching admin stats:', error)
+    return {
+      totalUsers: 0,
+      totalOrganizers: 0,
+      totalEvents: 0,
+      totalTickets: 0,
+      pendingApprovals: 0,
+      totalRevenue: 0
+    }
   }
 }
 

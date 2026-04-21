@@ -14,6 +14,7 @@ import {
   Bug,
   Lightbulb
 } from 'lucide-react'
+import MobileNav from '@/components/mobile-nav'
 
 export default function SupportPage() {
   const [formData, setFormData] = useState({
@@ -117,6 +118,7 @@ export default function SupportPage() {
               <Link href="/faq" className="text-gray-600 hover:text-gray-900">SSS</Link>
               <Link href="/contact" className="text-gray-600 hover:text-gray-900">İletişim</Link>
               <Link href="/login" className="text-gray-600 hover:text-gray-900">Giriş Yap</Link>
+              <MobileNav />
             </div>
           </div>
         </div>

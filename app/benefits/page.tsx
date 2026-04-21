@@ -28,6 +28,7 @@ import {
   ThumbsUp,
   Wallet
 } from 'lucide-react'
+import MobileNav from '@/components/mobile-nav'
 
 export default function BenefitsPage() {
   return (
@@ -55,6 +56,7 @@ export default function BenefitsPage() {
               <Link href="/login" className="text-gray-600 hover:text-gray-900">Giriş Yap</Link>
               <Link href="/organizer/register" className="px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 text-sm font-medium">Başla</Link>
             </div>
+            <MobileNav />
           </div>
         </div>
       </nav>
@@ -503,8 +505,9 @@ export default function BenefitsPage() {
             <div>
               <h4 className="text-white font-semibold mb-4">Destek</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/faq" className="hover:text-white">Yardım Merkezi</Link></li>
-                <li><Link href="/coming-soon" className="hover:text-white">İletişim</Link></li>
+                <li><Link href="/faq" className="hover:text-white">SSS</Link></li>
+                <li><Link href="/support" className="hover:text-white">Destek Al</Link></li>
+                <li><Link href="/contact" className="hover:text-white">İletişim</Link></li>
               </ul>
             </div>
             <div>

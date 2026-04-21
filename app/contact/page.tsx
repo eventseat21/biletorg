@@ -11,6 +11,7 @@ import {
   CheckCircle,
   Loader2
 } from 'lucide-react'
+import MobileNav from '@/components/mobile-nav'
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -90,6 +91,7 @@ export default function ContactPage() {
               <Link href="/" className="text-gray-600 hover:text-gray-900">Ana Sayfa</Link>
               <Link href="/faq" className="text-gray-600 hover:text-gray-900">SSS</Link>
               <Link href="/login" className="text-gray-600 hover:text-gray-900">Giriş Yap</Link>
+              <MobileNav />
             </div>
           </div>
         </div>
