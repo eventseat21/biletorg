@@ -37,6 +37,7 @@ export default function PricingPage() {
               </span>
             </Link>
             <div className="hidden md:flex items-center gap-8">
+              <Link href="/" className="text-gray-600 hover:text-gray-900">Ana Sayfa</Link>
               <Link href="/events" className="text-gray-600 hover:text-gray-900">Etkinlikler</Link>
               <Link href="/ticketshop" className="text-gray-600 hover:text-gray-900">Ticketshop</Link>
               <Link href="/saalplan" className="text-gray-600 hover:text-gray-900">Salon Planı</Link>
@@ -222,7 +223,7 @@ export default function PricingPage() {
                 </li>
               </ul>
               <Link 
-                href="/contact" 
+                href="/coming-soon" 
                 className="block w-full py-3 px-4 bg-gray-100 text-gray-700 rounded-xl font-semibold text-center hover:bg-gray-200 transition-colors"
               >
                 İletişime Geç
@@ -428,7 +429,7 @@ export default function PricingPage() {
               <ArrowRight className="w-5 h-5" />
             </Link>
             <Link 
-              href="/contact" 
+              href="/coming-soon" 
               className="inline-flex items-center gap-2 px-8 py-4 bg-primary-500 text-white border-2 border-primary-400 rounded-xl font-semibold hover:bg-primary-400 transition-all"
             >
               <MessageCircle className="w-5 h-5" />
@@ -439,7 +440,7 @@ export default function PricingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-12">
+      <footer className="bg-blue-900 text-blue-100 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
@@ -464,15 +465,15 @@ export default function PricingPage() {
             <div>
               <h4 className="text-white font-semibold mb-4">Destek</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/help" className="hover:text-white">Yardım Merkezi</Link></li>
-                <li><Link href="/contact" className="hover:text-white">İletişim</Link></li>
+                <li><Link href="/faq" className="hover:text-white">Yardım Merkezi</Link></li>
+                <li><Link href="/coming-soon" className="hover:text-white">İletişim</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="text-white font-semibold mb-4">Hukuk</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/privacy" className="hover:text-white">Gizlilik</Link></li>
-                <li><Link href="/terms" className="hover:text-white">Kullanım Şartları</Link></li>
+                <li><Link href="/coming-soon" className="hover:text-white">Gizlilik</Link></li>
+                <li><Link href="/coming-soon" className="hover:text-white">Kullanım Şartları</Link></li>
               </ul>
             </div>
           </div>

@@ -45,6 +45,7 @@ export default function BenefitsPage() {
               </span>
             </Link>
             <div className="hidden md:flex items-center gap-8">
+              <Link href="/" className="text-gray-600 hover:text-gray-900">Ana Sayfa</Link>
               <Link href="/events" className="text-gray-600 hover:text-gray-900">Etkinlikler</Link>
               <Link href="/ticketshop" className="text-gray-600 hover:text-gray-900">Ticketshop</Link>
               <Link href="/saalplan" className="text-gray-600 hover:text-gray-900">Salon Planı</Link>
@@ -67,7 +68,7 @@ export default function BenefitsPage() {
             alt="Concert stage" 
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-indigo-900/85 via-indigo-900/70 to-white" />
+          <div className="absolute inset-0 bg-gradient-to-b from-indigo-900/60 via-indigo-900/40 to-white/80" />
         </div>
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-medium mb-6">
@@ -93,7 +94,7 @@ export default function BenefitsPage() {
               <ArrowRight className="w-5 h-5" />
             </Link>
             <Link 
-              href="/demo" 
+              href="/coming-soon" 
               className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm text-white border border-white/30 rounded-xl font-semibold hover:bg-white/20 transition-all"
             >
               Demo İzle
@@ -476,7 +477,7 @@ export default function BenefitsPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-12">
+      <footer className="bg-blue-900 text-blue-100 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
@@ -502,15 +503,15 @@ export default function BenefitsPage() {
             <div>
               <h4 className="text-white font-semibold mb-4">Destek</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/help" className="hover:text-white">Yardım Merkezi</Link></li>
-                <li><Link href="/contact" className="hover:text-white">İletişim</Link></li>
+                <li><Link href="/faq" className="hover:text-white">Yardım Merkezi</Link></li>
+                <li><Link href="/coming-soon" className="hover:text-white">İletişim</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="text-white font-semibold mb-4">Hukuk</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/privacy" className="hover:text-white">Gizlilik</Link></li>
-                <li><Link href="/terms" className="hover:text-white">Kullanım Şartları</Link></li>
+                <li><Link href="/coming-soon" className="hover:text-white">Gizlilik</Link></li>
+                <li><Link href="/coming-soon" className="hover:text-white">Kullanım Şartları</Link></li>
               </ul>
             </div>
           </div>

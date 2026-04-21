@@ -190,7 +190,7 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-12">
+      <footer className="bg-blue-900 text-blue-100 py-12">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
@@ -210,16 +210,16 @@ export default function HomePage() {
             <div>
               <h4 className="text-white font-semibold mb-4">Destek</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/help" className="hover:text-white">Yardım Merkezi</Link></li>
-                <li><Link href="/contact" className="hover:text-white">İletişim</Link></li>
+                <li><Link href="/faq" className="hover:text-white">Yardım Merkezi</Link></li>
+                <li><Link href="/coming-soon" className="hover:text-white">İletişim</Link></li>
                 <li><Link href="/faq" className="hover:text-white">SSS</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="text-white font-semibold mb-4">Yasal</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/terms" className="hover:text-white">Kullanım Şartları</Link></li>
-                <li><Link href="/privacy" className="hover:text-white">Gizlilik Politikası</Link></li>
+                <li><Link href="/coming-soon" className="hover:text-white">Kullanım Şartları</Link></li>
+                <li><Link href="/coming-soon" className="hover:text-white">Gizlilik Politikası</Link></li>
               </ul>
             </div>
           </div>

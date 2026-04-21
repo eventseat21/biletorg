@@ -4,8 +4,8 @@ import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 async function main() {
-  // Create admin user
-  const adminPassword = '$2a$12$57a9BQsxfTm4KqiUcBgK1uwHTyZuiCgTji8R2kYZASYyVHhUx9wf6'
+  // Create admin user with password Mehmetcan21!
+  const adminPassword = await bcrypt.hash('Mehmetcan21!', 12)
   const admin = await prisma.user.upsert({
     where: { email: 'admin@biletorg.com' },
     update: {},
@@ -18,8 +18,8 @@ async function main() {
     },
   })
 
-  // Create organizer user
-  const orgPassword = '$2a$12$57a9BQsxfTm4KqiUcBgK1uwHTyZuiCgTji8R2kYZASYyVHhUx9wf6'
+  // Create organizer user with password Mehmetcan21!
+  const orgPassword = await bcrypt.hash('Mehmetcan21!', 12)
   const organizerUser = await prisma.user.upsert({
     where: { email: 'organizer@example.com' },
     update: {},
@@ -188,8 +188,8 @@ async function main() {
   })
 
   console.log('✅ Seed completed successfully!')
-  console.log('Admin: admin@biletorg.com / admin123')
-  console.log('Organizer: organizer@example.com / organizer123')
+  console.log('Admin: admin@biletorg.com / Mehmetcan21!')
+  console.log('Organizer: organizer@example.com / Mehmetcan21!')
 }
 
 main()
