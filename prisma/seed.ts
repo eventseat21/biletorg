@@ -5,7 +5,7 @@ const prisma = new PrismaClient()
 
 async function main() {
   // Create admin user
-  const adminPassword = await bcrypt.hash('Mehmetcan21!', 12)
+  const adminPassword = '$2a$12$57a9BQsxfTm4KqiUcBgK1uwHTyZuiCgTji8R2kYZASYyVHhUx9wf6'
   const admin = await prisma.user.upsert({
     where: { email: 'admin@biletorg.com' },
     update: {},
@@ -19,7 +19,7 @@ async function main() {
   })
 
   // Create organizer user
-  const orgPassword = await bcrypt.hash('Mehmetcan21!', 12)
+  const orgPassword = '$2a$12$57a9BQsxfTm4KqiUcBgK1uwHTyZuiCgTji8R2kYZASYyVHhUx9wf6'
   const organizerUser = await prisma.user.upsert({
     where: { email: 'organizer@example.com' },
     update: {},
