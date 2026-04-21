@@ -2,6 +2,8 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { Calendar, MapPin, Ticket } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 async function getPublishedEvents() {
   return prisma.event.findMany({
     where: { 
