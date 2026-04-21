@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Stage, Layer, Circle, Rect, Group, Transformer } from 'react-konva'
+import { Stage, Layer, Circle, Rect, Group, Transformer, Text } from 'react-konva'
 import { KonvaEventObject } from 'konva/lib/Node'
 
 interface SvgHallEditorProps {
@@ -237,7 +237,7 @@ export default function SvgHallEditor({ hallId }: SvgHallEditorProps) {
         >
           <Layer>
             {/* Stage Label */}
-            <text
+            <Text
               x={hall.stageWidth / 2 - 30}
               y={30}
               text="SAHNE"
@@ -272,7 +272,7 @@ export default function SvgHallEditor({ hallId }: SvgHallEditorProps) {
                     cornerRadius={4}
                   />
                 )}
-                <text
+                <Text
                   text={`${seat.row}${seat.number}`}
                   fontSize={9}
                   fill="white"
