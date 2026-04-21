@@ -52,10 +52,10 @@ const handler = NextAuth({
           id: user.id,
           email: user.email,
           name: user.name,
-          role: user.role,
+          role: user.role as 'USER' | 'ORGANIZER' | 'ADMIN',
           image: user.image,
-          organizerId: user.organizer?.id,
-          organizerStatus: user.organizer?.status,
+          organizerId: user.organizer?.id || null,
+          organizerStatus: user.organizer?.status as 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED' | null,
         }
       },
     }),
