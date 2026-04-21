@@ -39,7 +39,7 @@ export default function HomePage() {
             alt="Concert" 
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/90 to-purple-900/80" />
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/70 to-purple-900/50" />
         </div>
         <div className="container mx-auto px-4 py-24 md:py-32 relative">
           <div className="max-w-3xl">
@@ -156,24 +156,35 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* CTA with Background Image */}
       <section className="section bg-white">
         <div className="container mx-auto px-4">
-          <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-8 md:p-16 text-center text-white">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Hemen Başlamaya Hazır mısınız?
-            </h2>
-            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Ücretsiz hesap oluşturun, ilk etkinliğinizi oluşturmaya başlayın. 
-              Kredi kartı gerekmez.
-            </p>
-            <Link 
-              href="/organizer/register" 
-              className="btn bg-white text-gray-900 hover:bg-gray-100 px-8 py-4 text-lg font-semibold inline-flex items-center gap-2"
-            >
-              Organizatör Hesabı Aç
-              <ChevronRight className="w-5 h-5" />
-            </Link>
+          <div className="relative rounded-2xl overflow-hidden">
+            {/* Background Image */}
+            <div className="absolute inset-0">
+              <img 
+                src="/concert-crowd.jpg" 
+                alt="Concert crowd" 
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-900/90 via-gray-900/70 to-gray-900/50" />
+            </div>
+            <div className="relative p-8 md:p-16 text-center text-white">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 drop-shadow-lg">
+                Hemen Başlamaya Hazır mısınız?
+              </h2>
+              <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto drop-shadow">
+                Ücretsiz hesap oluşturun, ilk etkinliğinizi oluşturmaya başlayın. 
+                Kredi kartı gerekmez.
+              </p>
+              <Link 
+                href="/organizer/register" 
+                className="inline-flex items-center gap-2 px-8 py-4 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-100 transition-colors shadow-lg"
+              >
+                Organizatör Hesabı Aç
+                <ChevronRight className="w-5 h-5" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>

@@ -238,7 +238,7 @@ export default function FAQPage() {
             alt="Concert" 
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-indigo-900/70 via-indigo-900/50 to-white" />
+          <div className="absolute inset-0 bg-gradient-to-b from-indigo-900/50 via-indigo-900/30 to-white" />
         </div>
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-medium mb-6">
@@ -422,7 +422,7 @@ export default function FAQPage() {
           <img 
             src="/concert-support.jpg" 
             alt="Concert support" 
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-top"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/85 to-purple-900/85" />
         </div>

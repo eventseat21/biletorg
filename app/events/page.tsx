@@ -5,23 +5,28 @@ import { Calendar, MapPin, Ticket } from 'lucide-react'
 export const dynamic = 'force-dynamic'
 
 async function getPublishedEvents() {
-  return prisma.event.findMany({
-    where: { 
-      isPublished: true,
-      status: 'PUBLISHED',
-      startDate: { gte: new Date() }
-    },
-    orderBy: { startDate: 'asc' },
-    include: {
-      organizer: { select: { companyName: true } },
-      hall: { select: { name: true } },
-      ticketCategories: {
-        select: { price: true },
-        orderBy: { price: 'asc' },
-        take: 1
+  try {
+    return await prisma.event.findMany({
+      where: { 
+        isPublished: true,
+        status: 'PUBLISHED',
+        startDate: { gte: new Date() }
+      },
+      orderBy: { startDate: 'asc' },
+      include: {
+        organizer: { select: { companyName: true } },
+        hall: { select: { name: true } },
+        ticketCategories: {
+          select: { price: true },
+          orderBy: { price: 'asc' },
+          take: 1
+        }
       }
-    }
-  })
+    })
+  } catch (error) {
+    console.error('Error fetching events:', error)
+    return []
+  }
 }
 
 export default async function EventsPage() {
@@ -29,27 +34,34 @@ export default async function EventsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-primary-600">
-            BiletOrg
-          </Link>
-          <nav className="flex items-center gap-8">
-            <Link href="/events" className="text-primary-600 font-medium">
-              Etkinlikler
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                <Ticket className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-800 bg-clip-text text-transparent">
+                BiletOrg
+              </span>
             </Link>
-            <Link href="/login" className="text-gray-600 hover:text-gray-900">
-              Giriş Yap
-            </Link>
-            <Link href="/register" className="btn-primary text-sm">
-              Üye Ol
-            </Link>
-          </nav>
+            <div className="hidden md:flex items-center gap-8">
+              <Link href="/" className="text-gray-600 hover:text-indigo-600">Ana Sayfa</Link>
+              <Link href="/events" className="text-indigo-600 font-medium">Etkinlikler</Link>
+              <Link href="/ticketshop" className="text-gray-600 hover:text-indigo-600">Ticketshop</Link>
+              <Link href="/saalplan" className="text-gray-600 hover:text-indigo-600">Salon Planı</Link>
+              <Link href="/pricing" className="text-gray-600 hover:text-indigo-600">Fiyatlandırma</Link>
+              <Link href="/benefits" className="text-gray-600 hover:text-indigo-600">Avantajlar</Link>
+              <Link href="/faq" className="text-gray-600 hover:text-indigo-600">SSS</Link>
+              <Link href="/login" className="text-gray-600 hover:text-gray-900">Giriş Yap</Link>
+              <Link href="/organizer/register" className="px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 text-sm font-medium">Başla</Link>
+            </div>
+          </div>
         </div>
-      </header>
+      </nav>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 pt-32 pb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Yaklaşan Etkinlikler</h1>
 
         {events.length === 0 ? (
