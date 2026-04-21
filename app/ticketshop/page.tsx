@@ -17,6 +17,7 @@ import {
   Ticket,
   Smartphone
 } from 'lucide-react'
+import MobileNav from '@/components/mobile-nav'
 
 export default function TicketshopPage() {
   return (
