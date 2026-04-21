@@ -58,34 +58,43 @@ export default function BenefitsPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 bg-gradient-to-b from-primary-50/50 to-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-100 text-primary-700 rounded-full text-sm font-medium mb-6">
+      {/* Hero Section with Background Image */}
+      <section className="relative pt-32 pb-20">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <img 
+            src="/concert-benefits.jpg" 
+            alt="Concert stage" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-indigo-900/85 via-indigo-900/70 to-white" />
+        </div>
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-medium mb-6">
             <Sparkles className="w-4 h-4" />
             Neden BiletOrg?
           </div>
-          <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6">
+          <h1 className="text-4xl lg:text-6xl font-bold text-white mb-6 drop-shadow-lg">
             Etkinlik Düzenlemenin{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-800">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-400">
               En Akıllı Yolu
             </span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
+          <p className="text-xl text-white/90 max-w-2xl mx-auto mb-8 drop-shadow">
             Teknoloji, güvenlik ve kullanıcı deneyimini bir araya getirerek 
             etkinlik organizasyonunu kolaylaştırıyoruz.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link 
               href="/organizer/register" 
-              className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-semibold hover:from-primary-700 hover:to-primary-800 transition-all shadow-lg"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 rounded-xl font-semibold hover:from-yellow-500 hover:to-orange-600 transition-all shadow-lg"
             >
               Hemen Başla
               <ArrowRight className="w-5 h-5" />
             </Link>
             <Link 
               href="/demo" 
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-gray-700 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-all"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm text-white border border-white/30 rounded-xl font-semibold hover:bg-white/20 transition-all"
             >
               Demo İzle
             </Link>
