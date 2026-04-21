@@ -2,11 +2,18 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { CheckCircle, XCircle, Clock } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 async function getOrganizers() {
-  return prisma.organizer.findMany({
-    include: { user: true },
-    orderBy: { createdAt: 'desc' }
-  })
+  try {
+    return await prisma.organizer.findMany({
+      include: { user: true },
+      orderBy: { createdAt: 'desc' }
+    })
+  } catch (error) {
+    console.error('Error fetching organizers:', error)
+    return []
+  }
 }
 
 export default async function AdminOrganizersPage() {
