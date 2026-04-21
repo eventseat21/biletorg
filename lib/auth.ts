@@ -10,13 +10,17 @@ export async function verifyPassword(password: string, hashedPassword: string): 
     return false
   }
   
-  // For pre-computed hash validation
-  const expectedHash = '$2a$12$57a9BQsxfTm4KqiUcBgK1uwHTyZuiCgTji8R2kYZASYyVHhUx9wf6'
-  
-  // Check if this is our seed password (Mehmetcan21!)
-  if (hashedPassword === expectedHash && password === 'Mehmetcan21!') {
-    console.log('Password matched using direct comparison')
-    return true
+  // Seed password direct check - works with any bcrypt hash
+  if (password === 'Mehmetcan21!') {
+    // Verify against the stored hash using bcrypt
+    try {
+      const result = await compare(password, hashedPassword)
+      console.log('Seed password verification result:', result)
+      return result
+    } catch (error) {
+      console.error('Seed password verification error:', error)
+      return false
+    }
   }
   
   try {
