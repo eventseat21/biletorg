@@ -2,11 +2,64 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ChevronDown, ChevronUp, HelpCircle, MessageCircle, Ticket, Search } from 'lucide-react'
+import { 
+  ChevronDown, 
+  ChevronUp, 
+  HelpCircle, 
+  MessageCircle, 
+  Ticket, 
+  Search,
+  Zap,
+  CreditCard,
+  MapPin,
+  Shield,
+  Smartphone,
+  Users,
+  Headphones
+} from 'lucide-react'
+
+const categories = [
+  {
+    id: 'genel',
+    name: 'Genel',
+    icon: Zap
+  },
+  {
+    id: 'fiyatlandirma',
+    name: 'Fiyatlandırma',
+    icon: CreditCard
+  },
+  {
+    id: 'bilet-satis',
+    name: 'Bilet Satışı',
+    icon: Ticket
+  },
+  {
+    id: 'salon-plani',
+    name: 'Salon Planı',
+    icon: MapPin
+  },
+  {
+    id: 'teknik',
+    name: 'Teknik',
+    icon: Shield
+  },
+  {
+    id: 'mobil',
+    name: 'Mobil',
+    icon: Smartphone
+  },
+  {
+    id: 'destek',
+    name: 'Destek',
+    icon: Headphones
+  }
+]
 
 const faqs = [
   {
-    category: 'Genel',
+    category: 'genel',
+    categoryName: 'Genel',
     questions: [
       {
         q: 'BiletOrg nedir?',
@@ -23,7 +76,8 @@ const faqs = [
     ]
   },
   {
-    category: 'Fiyatlandırma',
+    category: 'fiyatlandirma',
+    categoryName: 'Fiyatlandırma',
     questions: [
       {
         q: 'Fiyatlandırma nasıl çalışıyor?',
@@ -44,7 +98,8 @@ const faqs = [
     ]
   },
   {
-    category: 'Bilet Satışı',
+    category: 'bilet-satis',
+    categoryName: 'Bilet Satışı',
     questions: [
       {
         q: 'Bilet nasıl satarım?',
@@ -65,7 +120,8 @@ const faqs = [
     ]
   },
   {
-    category: 'Salon Planı',
+    category: 'salon-plani',
+    categoryName: 'Salon Planı',
     questions: [
       {
         q: 'Salon planı nasıl oluşturabilirim?',
@@ -82,7 +138,8 @@ const faqs = [
     ]
   },
   {
-    category: 'Teknik',
+    category: 'teknik',
+    categoryName: 'Teknik',
     questions: [
       {
         q: 'Mobil uyumlu mu?',
@@ -99,7 +156,8 @@ const faqs = [
     ]
   },
   {
-    category: 'Destek',
+    category: 'destek',
+    categoryName: 'Destek',
     questions: [
       {
         q: 'Destek alabilir miyim?',
@@ -119,12 +177,18 @@ const faqs = [
 
 export default function FAQPage() {
   const [openItems, setOpenItems] = useState<string[]>([])
+  const [activeCategory, setActiveCategory] = useState<string>('genel')
   const [searchTerm, setSearchTerm] = useState('')
 
   const toggleItem = (id: string) => {
     setOpenItems(prev => 
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     )
+  }
+
+  const handleCategoryClick = (categoryId: string) => {
+    setActiveCategory(categoryId)
+    setOpenItems([]) // Reset opened items when switching category
   }
 
   const filteredFaqs = faqs.map(category => ({
@@ -134,6 +198,8 @@ export default function FAQPage() {
            q.a.toLowerCase().includes(searchTerm.toLowerCase())
     )
   })).filter(category => category.questions.length > 0)
+
+  const currentCategory = faqs.find(f => f.category === activeCategory)
 
   return (
     <div className="min-h-screen bg-white">
@@ -163,23 +229,31 @@ export default function FAQPage() {
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="pt-32 pb-20 bg-gradient-to-b from-indigo-50/50 to-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium mb-6">
+      {/* Hero with Background Image */}
+      <section className="relative pt-32 pb-12">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <img 
+            src="/concert-faq.jpg" 
+            alt="Concert" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-indigo-900/70 via-indigo-900/50 to-white" />
+        </div>
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-medium mb-6">
             <HelpCircle className="w-4 h-4" />
             Yardım Merkezi
           </div>
-          <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6">
+          <h1 className="text-4xl lg:text-5xl font-bold text-white mb-6 drop-shadow-lg">
             Sık Sorulan Sorular
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
+          <p className="text-xl text-white/90 max-w-2xl mx-auto mb-8 drop-shadow">
             BiletOrg hakkında merak ettiğiniz tüm soruların cevapları burada.
-            Aradığınızı bulamıyorsanız destek ekibimize ulaşın.
           </p>
 
           {/* Search */}
-          <div className="relative max-w-xl mx-auto">
+          <div className="relative max-w-xl mx-auto mb-12">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
@@ -189,72 +263,175 @@ export default function FAQPage() {
               className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
             />
           </div>
+
+          {/* Category Icons Grid - Eventim Light Style */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 max-w-5xl mx-auto">
+            {categories.map((cat) => {
+              const Icon = cat.icon
+              const isActive = activeCategory === cat.id
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategoryClick(cat.id)}
+                  className={`group flex flex-col items-center justify-center gap-3 rounded-xl transition-all duration-300 ${
+                    isActive 
+                      ? 'bg-blue-500 text-white shadow-lg scale-105 h-32 py-4' 
+                      : 'bg-white border-2 border-gray-100 hover:border-blue-200 hover:bg-blue-50 h-24 py-3'
+                  }`}
+                >
+                  <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    isActive 
+                      ? 'bg-white/20' 
+                      : 'bg-gray-100 group-hover:bg-blue-100'
+                  }`}>
+                    <Icon className={`w-7 h-7 transition-all duration-300 ${
+                      isActive 
+                        ? 'text-white' 
+                        : 'text-black group-hover:text-blue-600'
+                    }`} />
+                  </div>
+                  <span className={`text-sm font-medium transition-colors duration-300 text-center ${
+                    isActive 
+                      ? 'text-white' 
+                      : 'text-gray-700 group-hover:text-blue-700'
+                  }`}>
+                    {cat.name}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
         </div>
       </section>
 
       {/* FAQ Content */}
-      <section className="py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          {filteredFaqs.map((category, catIndex) => (
-            <div key={category.category} className="mb-12">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <span className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center text-lg">
-                  {catIndex + 1}
-                </span>
-                {category.category}
-              </h2>
-              <div className="space-y-4">
-                {category.questions.map((item, qIndex) => {
-                  const id = `${category.category}-${qIndex}`
-                  const isOpen = openItems.includes(id)
-                  return (
-                    <div
-                      key={id}
-                      className={`border rounded-xl overflow-hidden transition-all ${
-                        isOpen ? 'border-indigo-200 shadow-md' : 'border-gray-200'
-                      }`}
-                    >
-                      <button
-                        onClick={() => toggleItem(id)}
-                        className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 transition-colors"
+      <section className="py-12">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          {searchTerm ? (
+            // Search results
+            filteredFaqs.map((category) => (
+              <div key={category.category} className="mb-12">
+                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                  <span className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center text-sm">
+                    {categories.find(c => c.id === category.category)?.name.charAt(0)}
+                  </span>
+                  {category.categoryName}
+                </h2>
+                <div className="space-y-3">
+                  {category.questions.map((item, qIndex) => {
+                    const id = `${category.category}-${qIndex}`
+                    const isOpen = openItems.includes(id)
+                    return (
+                      <div
+                        key={id}
+                        className={`border rounded-xl overflow-hidden transition-all ${
+                          isOpen ? 'border-indigo-200 shadow-md' : 'border-gray-200'
+                        }`}
                       >
-                        <span className="font-semibold text-gray-900 pr-4">{item.q}</span>
-                        {isOpen ? (
-                          <ChevronUp className="w-5 h-5 text-indigo-600 flex-shrink-0" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                        <button
+                          onClick={() => toggleItem(id)}
+                          className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition-colors"
+                        >
+                          <span className="font-semibold text-gray-900 pr-4">{item.q}</span>
+                          {isOpen ? (
+                            <ChevronUp className="w-5 h-5 text-indigo-600 flex-shrink-0" />
+                          ) : (
+                            <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                          )}
+                        </button>
+                        {isOpen && (
+                          <div className="px-5 pb-5">
+                            <p className="text-gray-600 leading-relaxed">{item.a}</p>
+                          </div>
                         )}
-                      </button>
-                      {isOpen && (
-                        <div className="px-6 pb-6">
-                          <p className="text-gray-600 leading-relaxed">{item.a}</p>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            // Category view
+            currentCategory && (
+              <div>
+                <div className="flex items-center gap-3 mb-8">
+                  {(() => {
+                    const cat = categories.find(c => c.id === activeCategory)
+                    const Icon = cat?.icon || HelpCircle
+                    return (
+                      <>
+                        <div className="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center">
+                          <Icon className="w-6 h-6 text-white" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-900">
+                          {currentCategory.categoryName}
+                        </h2>
+                      </>
+                    )
+                  })()}
+                </div>
+                <div className="space-y-3">
+                  {currentCategory.questions.map((item, qIndex) => {
+                    const id = `${currentCategory.category}-${qIndex}`
+                    const isOpen = openItems.includes(id)
+                    return (
+                      <div
+                        key={id}
+                        className={`border rounded-xl overflow-hidden transition-all ${
+                          isOpen ? 'border-indigo-200 shadow-md' : 'border-gray-200'
+                        }`}
+                      >
+                        <button
+                          onClick={() => toggleItem(id)}
+                          className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition-colors"
+                        >
+                          <span className="font-semibold text-gray-900 pr-4">{item.q}</span>
+                          {isOpen ? (
+                            <ChevronUp className="w-5 h-5 text-indigo-600 flex-shrink-0" />
+                          ) : (
+                            <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                          )}
+                        </button>
+                        {isOpen && (
+                          <div className="px-5 pb-5">
+                            <p className="text-gray-600 leading-relaxed">{item.a}</p>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          )}
 
-          {filteredFaqs.length === 0 && (
+          {filteredFaqs.length === 0 && searchTerm && (
             <div className="text-center py-12">
               <HelpCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500">Aradığınız soruyu bulamadık.</p>
-              <p className="text-gray-400 text-sm mt-2">Farklı anahtar kelimeler deneyin veya destek ekibimize ulaşın.</p>
+              <p className="text-gray-400 text-sm mt-2">Farklı anahtar kelimeler deneyin.</p>
             </div>
           )}
         </div>
       </section>
 
-      {/* Contact CTA */}
-      <section className="py-20 bg-gradient-to-br from-indigo-600 to-indigo-700 text-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      {/* Contact CTA with Background Image */}
+      <section className="relative py-20 text-white overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <img 
+            src="/concert-support.jpg" 
+            alt="Concert support" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/85 to-purple-900/85" />
+        </div>
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <MessageCircle className="w-12 h-12 mx-auto mb-6 opacity-80" />
           <h2 className="text-3xl font-bold mb-4">
             Aradığınız Cevabı Bulamadınız mı?
           </h2>
-          <p className="text-xl text-indigo-100 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
             Destek ekibimiz size yardımcı olmaya hazır. 
             7/24 canlı destek ve e-posta desteği sunuyoruz.
           </p>
@@ -267,7 +444,7 @@ export default function FAQPage() {
             </a>
             <Link 
               href="/contact"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-indigo-500 text-white border-2 border-indigo-400 rounded-xl font-semibold hover:bg-indigo-400 transition-colors"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-white/30 rounded-xl font-semibold hover:bg-white/20 transition-colors"
             >
               İletişim Formu
             </Link>

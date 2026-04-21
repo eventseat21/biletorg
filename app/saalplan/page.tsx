@@ -53,23 +53,32 @@ export default function SaalplanPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 bg-gradient-to-b from-primary-50/50 to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Hero Section with Background Image */}
+      <section className="relative pt-32 pb-20">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <img 
+            src="/concert-saalplan.jpg" 
+            alt="Theater interior" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/90 via-indigo-900/70 to-indigo-900/40" />
+        </div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-100 text-primary-700 rounded-full text-sm font-medium mb-6">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-medium mb-6">
                 <Sparkles className="w-4 h-4" />
                 Yeni: SVG Import
               </div>
-              <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
+              <h1 className="text-5xl lg:text-6xl font-bold text-white leading-tight mb-6 drop-shadow-lg">
                 Dijital{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-800">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-400">
                   Salon Planı
                 </span>{' '}
                 Oluşturun
               </h1>
-              <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+              <p className="text-xl text-white/90 mb-8 leading-relaxed drop-shadow">
                 Etkinlik mekanınızın dijital kopyasını oluşturun, koltukları yönetin 
                 ve biletleme sistemine entegre edin. Manuel çizim veya SVG import seçenekleri.
               </p>
@@ -83,20 +92,20 @@ export default function SaalplanPage() {
                 </Link>
                 <Link 
                   href="/demo/saalplan" 
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-white text-gray-700 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-all"
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm text-white border border-white/30 rounded-xl font-semibold hover:bg-white/20 transition-all"
                 >
                   Demo Görüntüle
                 </Link>
               </div>
-              <div className="flex items-center gap-6 mt-8 text-sm text-gray-500">
+              <div className="flex items-center gap-6 mt-8 text-sm text-white/80">
                 <span className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-green-500" /> Sürükle-bırak
+                  <Check className="w-4 h-4 text-yellow-400" /> Sürükle-bırak
                 </span>
                 <span className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-green-500" /> SVG Import
+                  <Check className="w-4 h-4 text-yellow-400" /> SVG Import
                 </span>
                 <span className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-green-500" /> 3D Önizleme
+                  <Check className="w-4 h-4 text-yellow-400" /> 3D Önizleme
                 </span>
               </div>
             </div>
