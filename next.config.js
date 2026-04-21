@@ -6,6 +6,10 @@ const nextConfig = {
   images: {
     domains: ['localhost'],
   },
+  webpack: (config) => {
+    config.externals = [...(config.externals || []), 'canvas']
+    return config
+  },
 }
 
 module.exports = nextConfig
