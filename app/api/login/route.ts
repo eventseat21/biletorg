@@ -18,7 +18,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Kullanıcı bulunamadı' }, { status: 401 })
     }
     
-    const isValid = await compare(password, user.password)
+    const isValid = user.password ? await compare(password, user.password) : false
     
     if (!isValid) {
       return NextResponse.json({ error: 'Şifre hatalı' }, { status: 401 })
