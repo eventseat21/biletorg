@@ -9,7 +9,7 @@ export async function GET() {
       select: { email: true, name: true, role: true, password: true }
     })
     
-    const testResult = await compare('Mehmetcan21!', users[0]?.password || '')
+    const testResult = users[0]?.password ? await compare('Mehmetcan21!', users[0].password) : false
     
     return Response.json({ 
       users: users.map(u => ({ email: u.email, role: u.role, password: u.password?.substring(0, 30) })),

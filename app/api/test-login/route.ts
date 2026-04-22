@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     console.log('Stored hash:', user.password)
     console.log('Input pass:', password)
     
-    const match = await compare(password, user.password)
+    const match = user.password ? await compare(password, user.password) : false
     console.log('Match:', match)
     
     return NextResponse.json({
