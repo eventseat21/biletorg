@@ -1,11 +1,9 @@
 import NextAuth from 'next-auth'
-import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/prisma'
-import { verifyPassword } from '@/lib/auth'
+import { compare } from 'bcryptjs'
 
 const handler = NextAuth({
-  adapter: PrismaAdapter(prisma) as any,
   session: {
     strategy: 'jwt',
   },
@@ -21,10 +19,10 @@ const handler = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        console.log('Authorize called with:', credentials?.email)
+        console.log('== LOGIN ==')
+        console.log('Email:', credentials?.email)
         
         if (!credentials?.email || !credentials?.password) {
-          console.log('Missing credentials')
           return null
         }
 
@@ -33,16 +31,15 @@ const handler = NextAuth({
           include: { organizer: true },
         })
 
-        console.log('User found:', user ? 'Yes' : 'No')
+        console.log('Found:', !!user)
         
         if (!user || !user.password) {
-          console.log('No user or no password')
+          console.log('No user/pass')
           return null
         }
 
-        console.log('Stored password hash:', user.password.substring(0, 20) + '...')
-        const isValid = await verifyPassword(credentials.password, user.password)
-        console.log('Password valid:', isValid)
+        const isValid = await compare(credentials.password, user.password)
+        console.log('Valid:', isValid)
 
         if (!isValid) {
           return null
@@ -52,28 +49,21 @@ const handler = NextAuth({
           id: user.id,
           email: user.email,
           name: user.name,
-          role: user.role as 'USER' | 'ORGANIZER' | 'ADMIN',
-          image: user.image,
-          organizerId: user.organizer?.id || null,
-          organizerStatus: user.organizer?.status as 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED' | null,
+          role: user.role as any,
         }
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: any; user?: any }) {
       if (user) {
         token.role = user.role
-        token.organizerId = user.organizerId
-        token.organizerStatus = user.organizerStatus
       }
       return token
     },
-    async session({ session, token }) {
-      if (token) {
+    async session({ session, token }: { session: any; token: any }) {
+      if (token && session.user) {
         session.user.role = token.role
-        session.user.organizerId = token.organizerId
-        session.user.organizerStatus = token.organizerStatus
       }
       return session
     },
