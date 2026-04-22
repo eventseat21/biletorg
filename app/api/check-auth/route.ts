@@ -17,7 +17,7 @@ export async function GET() {
     
     const user = users[0]
     const testPassword = 'Mehmetcan21!'
-    const match = await compare(testPassword, user.password)
+    const match = user.password ? await compare(testPassword, user.password) : false
     
     return NextResponse.json({ 
       email: user.email,
