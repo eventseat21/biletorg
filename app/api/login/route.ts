@@ -15,23 +15,13 @@ export async function POST(request: Request) {
     })
     
     if (!user || !user.password) {
-<<<<<<< HEAD
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
+      return NextResponse.json({ error: 'Kullanıcı bulunamadı' }, { status: 401 })
     }
     
     const isValid = await compare(password, user.password)
     
     if (!isValid) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
-=======
-      return NextResponse.json({ error: 'Kullanıcı bulunamadı' }, { status: 401 })
-    }
-    
-    const isValid = user.password ? await compare(password, user.password) : false
-    
-    if (!isValid) {
       return NextResponse.json({ error: 'Şifre hatalı' }, { status: 401 })
->>>>>>> 14f70d4d54d7664c16c2692c207a5d082dc88ce3
     }
     
     const token = await new SignJWT({ 
