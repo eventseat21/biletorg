@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 import { 
   Check, 
@@ -18,11 +21,61 @@ import {
   Globe,
   Mail,
   MessageCircle,
-  Calculator
+  Calculator,
+  Info,
+  Store,
+  Computer
 } from 'lucide-react'
 import MobileNav from '@/components/mobile-nav'
 
 export default function PricingPage() {
+  const [ticketPrice, setTicketPrice] = useState<number>(10)
+  const [showTooltip, setShowTooltip] = useState(false)
+
+  // Eventim Light commission formula
+  const calculateCommission = (price: number): number => {
+    if (price < 7) {
+      return price * 0.035 + 0.49
+    } else {
+      return price * 0.035 + 0.99
+    }
+  }
+
+  // Format currency
+  const formatCurrency = (amount: number): string => {
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount)
+  }
+
+  const formatCurrencyInt = (amount: number): string => {
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount)
+  }
+
+  const commission = calculateCommission(ticketPrice)
+  const organizerEarnings = ticketPrice
+
+  // Channel 1: Customer's own ticket sales point (iframe)
+  const channel1Commission = commission
+  const channel1CustomerTotal = ticketPrice + channel1Commission
+
+  // Channel 2: Box office - same tiered commission as channel 1
+  const channel2Commission = commission
+  const channel2CustomerTotal = ticketPrice + channel2Commission
+
+  // Channel 3: Eventim Shop - commission + 10% reservation fee
+  const reservationFee = ticketPrice * 0.10
+  const channel3Commission = commission + reservationFee
+  const channel3CustomerTotal = ticketPrice + channel3Commission
+
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
@@ -53,42 +106,164 @@ export default function PricingPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {/* Hero Section with Eventim Calculator */}
       <section className="pt-32 pb-20 bg-gradient-to-b from-primary-50/50 to-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-100 text-primary-700 rounded-full text-sm font-medium mb-6">
-            <Sparkles className="w-4 h-4" />
-            Şeffaf Fiyatlandırma
-          </div>
-          <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6">
-            Komisyon Başına Ödeyin
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-            Aylık ücret yok, gizli maliyet yok. Sadece sattığınız bilet başına 
-            %5 komisyon ödersiniz. Gerisi tamamen sizin.
-          </p>
-          
-          {/* Price Calculator */}
-          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-2xl mx-auto border border-gray-100">
-            <div className="flex items-center justify-center gap-2 mb-6">
-              <Calculator className="w-6 h-6 text-primary-600" />
-              <h3 className="text-lg font-semibold text-gray-900">Komisyon Hesaplayıcı</h3>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-100 text-primary-700 rounded-full text-sm font-medium mb-6">
+              <Sparkles className="w-4 h-4" />
+              Şeffaf Fiyatlandırma
             </div>
-            <div className="grid md:grid-cols-3 gap-6 items-center">
-              <div className="text-center">
-                <p className="text-sm text-gray-500 mb-2">Bilet Fiyatı</p>
-                <p className="text-3xl font-bold text-gray-900">₺100</p>
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mb-2">
-                  <Percent className="w-6 h-6 text-primary-600" />
+            <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6">
+              Komisyon Başına Ödeyin
+            </h1>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
+              Aylık ücret yok, gizli maliyet yok. Sadece sattığınız bilet başına 
+              komisyon ödersiniz. Gerisi tamamen sizin.
+            </p>
+          </div>
+
+          {/* Interactive Price Calculator - Eventim Style */}
+          <div className="max-w-7xl mx-auto">
+            {/* Input Section */}
+            <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-gray-100">
+              <div className="flex items-center justify-center gap-2 mb-6">
+                <Calculator className="w-6 h-6 text-primary-600" />
+                <h3 className="text-xl font-semibold text-gray-900">Bilet Fiyat Hesaplayıcı</h3>
+                <div className="relative">
+                  <button
+                    onMouseEnter={() => setShowTooltip(true)}
+                    onMouseLeave={() => setShowTooltip(false)}
+                    className="p-1 text-gray-400 hover:text-gray-600"
+                  >
+                    <Info className="w-5 h-5" />
+                  </button>
+                  {showTooltip && (
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-80 bg-gray-900 text-white text-sm p-4 rounded-lg shadow-xl z-50">
+                      <p className="font-semibold mb-2">Komisyon Hesaplama:</p>
+                      <p>Bilet ücreti, 6,99 €'ya kadar olan taban fiyatlar için %3,5 artı bilet başına 0,49 €, 7,00 € ve üzeri taban fiyatlar için ise bilet başına %3,5 artı bilet başına 0,99 €'dur.</p>
+                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900"></div>
+                    </div>
+                  )}
                 </div>
-                <p className="text-sm text-gray-500">Platform Komisyonu</p>
-                <p className="text-lg font-semibold text-primary-600">%5</p>
               </div>
-              <div className="text-center">
-                <p className="text-sm text-gray-500 mb-2">Siz Kazanırsınız</p>
-                <p className="text-3xl font-bold text-green-600">₺95</p>
+
+              <div className="max-w-md mx-auto">
+                <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
+                  Bilet Fiyatı (€)
+                </label>
+                <div className="flex items-center justify-center gap-4">
+                  <input
+                    type="number"
+                    min="1"
+                    max="1000"
+                    value={ticketPrice}
+                    onChange={(e) => setTicketPrice(Math.max(1, parseFloat(e.target.value) || 0))}
+                    className="w-32 px-4 py-3 text-center text-2xl font-bold border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 3 Channel Cards */}
+            <div className="grid md:grid-cols-3 gap-4">
+              {/* Channel 1: Customer's own ticket sales point */}
+              <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 flex flex-col">
+                <div className="h-14 flex items-center justify-center mb-4">
+                  <p className="text-sm text-gray-500 text-center">İsteğe bağlı genişletilmiş menzil</p>
+                </div>
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <Computer className="w-6 h-6 text-primary-600" />
+                  <h4 className="text-lg font-bold text-center">KENDİ BİLET SATIŞ NOKTANIZ</h4>
+                </div>
+                <div className="flex-1 space-y-3 text-sm">
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Komisyon:</span>
+                    <span className="font-semibold">{formatCurrency(commission)}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Ön rezervasyon:</span>
+                    <span className="font-semibold">-</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Gönderim:</span>
+                    <span className="font-semibold">-</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Toplam maliyet:</span>
+                    <span className="font-bold text-lg">{formatCurrency(channel1CustomerTotal)}</span>
+                  </div>
+                </div>
+                <div className="mt-6 bg-blue-500 text-white p-4 rounded-xl text-center">
+                  <p className="text-lg mb-1">Kazancınız</p>
+                  <p className="text-4xl font-bold">{formatCurrencyInt(organizerEarnings)}</p>
+                </div>
+              </div>
+
+              {/* Channel 2: Box office - same calculation as channel 1 */}
+              <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 flex flex-col">
+                <div className="h-14 flex items-center justify-center mb-4">
+                  <p className="text-sm text-gray-500 text-center">İsteğe bağlı genişletilmiş menzil</p>
+                </div>
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <Store className="w-6 h-6 text-primary-600" />
+                  <h4 className="text-lg font-bold text-center">GİŞE (GÜNDÜZ/GECE)</h4>
+                </div>
+                <div className="flex-1 space-y-3 text-sm">
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Komisyon:</span>
+                    <span className="font-semibold">{formatCurrency(commission)}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Ön rezervasyon:</span>
+                    <span className="font-semibold">-</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Gönderim:</span>
+                    <span className="font-semibold">-</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Toplam maliyet:</span>
+                    <span className="font-bold text-lg">{formatCurrency(ticketPrice + commission)}</span>
+                  </div>
+                </div>
+                <div className="mt-6 bg-blue-500 text-white p-4 rounded-xl text-center">
+                  <p className="text-lg mb-1">Kazancınız</p>
+                  <p className="text-4xl font-bold">{formatCurrencyInt(organizerEarnings)}</p>
+                </div>
+              </div>
+
+              {/* Channel 3: Eventim Shop */}
+              <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 flex flex-col">
+                <div className="h-14 flex items-center justify-center mb-4">
+                  <p className="text-sm text-gray-500 text-center">İsteğe bağlı genişletilmiş menzil</p>
+                </div>
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <Globe className="w-6 h-6 text-primary-600" />
+                  <h4 className="text-lg font-bold text-center">BİLETORG BİLET SATIŞ NOKTALARI</h4>
+                </div>
+                <div className="flex-1 space-y-3 text-sm">
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Komisyon:</span>
+                    <span className="font-semibold">{formatCurrency(commission)}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Ön rezervasyon (%10):</span>
+                    <span className="font-semibold">{formatCurrency(reservationFee)}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Gönderim:</span>
+                    <span className="font-semibold">-</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Toplam maliyet:</span>
+                    <span className="font-bold text-lg">{formatCurrency(channel3CustomerTotal)}</span>
+                  </div>
+                </div>
+                <div className="mt-6 bg-blue-500 text-white p-4 rounded-xl text-center">
+                  <p className="text-lg mb-1">Kazancınız</p>
+                  <p className="text-4xl font-bold">{formatCurrencyInt(organizerEarnings)}</p>
+                </div>
               </div>
             </div>
           </div>

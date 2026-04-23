@@ -1,24 +1,29 @@
 'use client'
-
-import { useSession } from 'next-auth/react'
-import { redirect } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { 
-  Ticket, 
-  Calendar, 
-  Heart, 
-  User, 
-  Settings,
-  Bell,
-  ChevronRight,
-  Clock,
-  MapPin
-} from 'lucide-react'
+import { Ticket, Calendar, Heart, Bell, ChevronRight, Clock, MapPin, User, Settings } from 'lucide-react'
 
 export default function UserDashboardPage() {
-  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
-  if (status === 'loading') {
+  useEffect(() => {
+    fetch('/api/me')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.user) {
+          router.push('/login?callbackUrl=/user/dashboard')
+        } else {
+          setUser(data.user)
+        }
+      })
+      .catch(() => router.push('/login?callbackUrl=/user/dashboard'))
+      .finally(() => setLoading(false))
+  }, [router])
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
@@ -26,56 +31,22 @@ export default function UserDashboardPage() {
     )
   }
 
-  if (!session) {
-    redirect('/login?callbackUrl=/user/dashboard')
+  if (!user) {
+    return null
   }
 
-  const user = session.user
-
-  // Mock data - gerçek veriler API'den gelecek
   const myTickets = [
-    {
-      id: 1,
-      eventTitle: 'Tarkan Konseri',
-      date: '2026-05-15',
-      time: '20:00',
-      location: 'İstanbul Arena',
-      seat: 'A12',
-      category: 'VIP',
-      status: 'Aktif'
-    },
-    {
-      id: 2,
-      eventTitle: 'Caz Festivali',
-      date: '2026-06-20',
-      time: '19:30',
-      location: 'Küçükçiftlik Park',
-      seat: 'B45',
-      category: 'Normal',
-      status: 'Aktif'
-    }
+    { id: 1, eventTitle: 'Tarkan Konseri', date: '2026-05-15', time: '20:00', location: 'İstanbul Arena', seat: 'A12', category: 'VIP', status: 'Aktif' },
+    { id: 2, eventTitle: 'Caz Festivali', date: '2026-06-20', time: '19:30', location: 'Küçükçiftlik Park', seat: 'B45', category: 'Normal', status: 'Aktif' }
   ]
 
   const upcomingEvents = [
-    {
-      id: 1,
-      title: 'Yaz Festivali 2026',
-      date: '2026-07-01',
-      location: 'İstanbul',
-      image: '/concert-hero.jpg'
-    },
-    {
-      id: 2,
-      title: 'Rock Konseri',
-      date: '2026-08-15',
-      location: 'Ankara',
-      image: '/concert-benefits.jpg'
-    }
+    { id: 1, title: 'Yaz Festivali 2026', date: '2026-07-01', location: 'İstanbul', image: '/concert-hero.jpg' },
+    { id: 2, title: 'Rock Konseri', date: '2026-08-15', location: 'Ankara', image: '/concert-benefits.jpg' }
   ]
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -104,7 +75,6 @@ export default function UserDashboardPage() {
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
             Hoş Geldiniz, {user?.name?.split(' ')[0] || 'Kullanıcı'}!
@@ -114,7 +84,6 @@ export default function UserDashboardPage() {
           </p>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center gap-4">
@@ -154,7 +123,6 @@ export default function UserDashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* My Tickets */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100">
               <div className="p-6 border-b border-gray-100">
@@ -191,10 +159,7 @@ export default function UserDashboardPage() {
                         <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
                           {ticket.status}
                         </span>
-                        <Link 
-                          href={`/user/tickets/${ticket.id}`}
-                          className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                        >
+                        <Link href={`/user/tickets/${ticket.id}`} className="p-2 text-gray-400 hover:text-indigo-600">
                           <ChevronRight className="w-5 h-5" />
                         </Link>
                       </div>
@@ -202,71 +167,18 @@ export default function UserDashboardPage() {
                   </div>
                 ))}
               </div>
-              <div className="p-4 border-t border-gray-100">
-                <Link 
-                  href="/user/tickets"
-                  className="flex items-center justify-center gap-2 text-indigo-600 font-medium hover:text-indigo-700 transition-colors"
-                >
-                  Tüm Biletlerimi Gör
-                  <ChevronRight className="w-4 h-4" />
-                </Link>
-              </div>
             </div>
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-6">
-            {/* Upcoming Events */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Yaklaşan Etkinlikler</h3>
-              <div className="space-y-4">
-                {upcomingEvents.map((event) => (
-                  <Link 
-                    key={event.id}
-                    href={`/events/${event.id}`}
-                    className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors"
-                  >
-                    <div className="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                      <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 truncate">{event.title}</h4>
-                      <p className="text-sm text-gray-600">{new Date(event.date).toLocaleDateString('tr-TR')}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-              <Link 
-                href="/events"
-                className="flex items-center justify-center gap-2 mt-4 text-indigo-600 font-medium hover:text-indigo-700 transition-colors"
-              >
-                Tüm Etkinlikler
-                <ChevronRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {/* Quick Actions */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <h3 className="font-semibold text-gray-900 mb-4">Hızlı İşlemler</h3>
               <div className="space-y-2">
-                <Link 
-                  href="/user/profile"
-                  className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors"
-                >
+                <Link href="/user/profile" className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg">
                   <User className="w-5 h-5 text-gray-600" />
                   <span className="text-gray-700">Profilim</span>
                 </Link>
-                <Link 
-                  href="/user/settings"
-                  className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors"
-                >
-                  <Settings className="w-5 h-5 text-gray-600" />
-                  <span className="text-gray-700">Ayarlar</span>
-                </Link>
-                <Link 
-                  href="/support"
-                  className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors"
-                >
+                <Link href="/support" className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg">
                   <Bell className="w-5 h-5 text-gray-600" />
                   <span className="text-gray-700">Destek Al</span>
                 </Link>
