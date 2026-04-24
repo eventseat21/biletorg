@@ -78,10 +78,11 @@ export async function POST(request: Request) {
     }
 
     if (e instanceof Prisma.PrismaClientInitializationError) {
+      console.error('[password-signin] Prisma init:', e.message, e.errorCode)
       return NextResponse.json(
         {
           error:
-            'Veritabanı başlatılamadı. DATABASE_URL değerini ve ortam değişkenlerini kontrol edin.',
+            'Veritabanı bağlantısı kurulamıyor. Vercel (veya hosting) ortam değişkenlerinde DATABASE_URL tanımlı olmalı. Supabase entegrasyonu yalnızca POSTGRES_PRISMA_URL veriyorsa, aynı adresi DATABASE_URL olarak da ekleyin. Supabase’te "Transaction pooler" (port 6543) URI kullanın; şifrede @ veya özel karakter varsa bağlantı dizesinde URL-encode edin. Proje ayarlarından değişkenleri kaydedip yeniden deploy edin.',
         },
         { status: 503 }
       )
