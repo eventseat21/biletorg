@@ -1,3 +1,17 @@
+function warnIfDatabaseUrlLooksLikeTemplate(url: string): void {
+  const s = url.toLowerCase()
+  if (
+    s.includes('[your-password]') ||
+    s.includes('<your-password>') ||
+    s.includes('[password]') ||
+    s.includes('your_password_here')
+  ) {
+    console.error(
+      '[db-url] DATABASE_URL hâlâ şablon metin içeriyor (ör. [YOUR-PASSWORD]). Supabase → Project Settings → Database → gerçek şifreyi kullanın; @ # % gibi karakterleri URL-encode edin.'
+    )
+  }
+}
+
 /**
  * Vercel/Supabase ortamlarında veritabanı URL'si farklı isimlerle gelir.
  * Prisma şeması DATABASE_URL bekler; çalışma zamanında eşleşen ilk değişkeni kullanırız.
@@ -11,7 +25,10 @@ export function resolveDatabaseUrl(): string | undefined {
   ]
   for (const raw of candidates) {
     const u = raw?.trim()
-    if (u) return normalizePostgresUrl(u)
+    if (u) {
+      warnIfDatabaseUrlLooksLikeTemplate(u)
+      return normalizePostgresUrl(u)
+    }
   }
   return undefined
 }
