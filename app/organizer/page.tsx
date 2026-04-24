@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Calendar, Ticket, DollarSign, Users, TrendingUp, Plus } from 'lucide-react'
@@ -56,7 +57,7 @@ async function getDashboardData(organizerId: string) {
 }
 
 export default async function OrganizerDashboard() {
-  const session = await getServerSession()
+  const session = await getServerSession(authOptions)
   
   if (!session?.user?.organizerId) {
     redirect('/login')

@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/lib/auth'
 import Link from 'next/link'
 import { Plus, MapPin, Users, ArrowRight } from 'lucide-react'
 
@@ -14,7 +15,7 @@ async function getHalls(organizerId: string) {
 }
 
 export default async function HallsPage() {
-  const session = await getServerSession()
+  const session = await getServerSession(authOptions)
   
   if (!session?.user?.organizerId) {
     return null

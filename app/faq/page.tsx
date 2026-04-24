@@ -17,7 +17,7 @@ import {
   Users,
   Headphones
 } from 'lucide-react'
-import MobileNav from '@/components/mobile-nav'
+import Header from '@/components/header'
 
 const categories = [
   {
@@ -204,33 +204,7 @@ export default function FAQPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                <Ticket className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-800 bg-clip-text text-transparent">
-                BiletOrg
-              </span>
-            </Link>
-            <div className="hidden md:flex items-center gap-8">
-              <Link href="/" className="text-gray-600 hover:text-gray-900">Ana Sayfa</Link>
-              <Link href="/events" className="text-gray-600 hover:text-gray-900">Etkinlikler</Link>
-              <Link href="/ticketshop" className="text-gray-600 hover:text-gray-900">Ticketshop</Link>
-              <Link href="/saalplan" className="text-gray-600 hover:text-gray-900">Salon Planı</Link>
-              <Link href="/pricing" className="text-gray-600 hover:text-gray-900">Fiyatlandırma</Link>
-              <Link href="/benefits" className="text-gray-600 hover:text-gray-900">Avantajlar</Link>
-              <Link href="/faq" className="text-indigo-600 font-medium">SSS</Link>
-              <Link href="/login" className="text-gray-600 hover:text-gray-900">Giriş Yap</Link>
-              <Link href="/organizer/register" className="px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 text-sm font-medium">Başla</Link>
-            </div>
-            <MobileNav />
-          </div>
-        </div>
-      </nav>
+<Header />
 
       {/* Hero with Background Image */}
       <section className="relative pt-32 pb-12">

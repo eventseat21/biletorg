@@ -1,27 +1,23 @@
 import { NextResponse } from 'next/server'
-import { jwtVerify } from 'jose'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/lib/auth'
 
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'fallback-secret-key-12345'
-const secret = new TextEncoder().encode(JWT_SECRET)
-
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const token = request.cookies.get('auth-token')?.value
-    
-    if (!token) {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.email) {
       return NextResponse.json({ user: null }, { status: 401 })
     }
-    
-    const { payload } = await jwtVerify(token, secret)
-    
+
     return NextResponse.json({
       user: {
-        email: payload.email,
-        name: payload.email?.split('@')[0],
-        role: payload.role
-      }
+        email: session.user.email,
+        name: session.user.name ?? session.user.email.split('@')[0] ?? '',
+        role: session.user.role,
+      },
     })
-  } catch (e) {
+  } catch {
     return NextResponse.json({ user: null }, { status: 401 })
   }
 }

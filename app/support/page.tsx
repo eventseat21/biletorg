@@ -14,7 +14,7 @@ import {
   Bug,
   Lightbulb
 } from 'lucide-react'
-import MobileNav from '@/components/mobile-nav'
+import Header from '@/components/header'
 
 export default function SupportPage() {
   const [formData, setFormData] = useState({
@@ -103,26 +103,8 @@ export default function SupportPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                <Ticket className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">BiletOrg</span>
-            </Link>
-            <div className="flex items-center gap-8">
-              <Link href="/" className="text-gray-600 hover:text-gray-900">Ana Sayfa</Link>
-              <Link href="/faq" className="text-gray-600 hover:text-gray-900">SSS</Link>
-              <Link href="/contact" className="text-gray-600 hover:text-gray-900">İletişim</Link>
-              <Link href="/login" className="text-gray-600 hover:text-gray-900">Giriş Yap</Link>
-              <MobileNav />
-            </div>
-          </div>
-        </div>
-      </nav>
+{/* Navigation */}
+       <Header />
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-8">

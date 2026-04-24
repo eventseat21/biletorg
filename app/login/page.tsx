@@ -1,9 +1,11 @@
 'use client'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { getSession, signIn } from 'next-auth/react'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -15,21 +17,36 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+      const callbackUrl = searchParams.get('callbackUrl')
+      const res = await signIn('credentials', {
+        email: email.trim(),
+        password,
+        redirect: false,
       })
 
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.error || 'Giriş başarısız')
+      if (res?.error) {
+        setError('E-posta veya şifre hatalı')
         return
       }
 
-      router.push('/user/dashboard')
-    } catch (err) {
+      const session = await getSession()
+      const role = session?.user?.role
+
+      if (callbackUrl?.startsWith('/')) {
+        router.push(callbackUrl)
+        router.refresh()
+        return
+      }
+
+      if (role === 'ADMIN') {
+        router.push('/admin')
+      } else if (role === 'ORGANIZER') {
+        router.push('/organizer')
+      } else {
+        router.push('/user/dashboard')
+      }
+      router.refresh()
+    } catch {
       setError('Bir hata oluştu')
     } finally {
       setLoading(false)
@@ -42,7 +59,7 @@ export default function LoginPage() {
         <h1 className="text-3xl font-bold text-center mb-8 text-primary-600">
           BiletOrg
         </h1>
-        
+
         {error && (
           <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6">
             {error}
@@ -86,5 +103,19 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600" />
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   )
 }
