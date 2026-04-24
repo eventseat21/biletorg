@@ -1,3 +1,4 @@
+import type { NextResponse } from 'next/server'
 import type { NextAuthOptions } from 'next-auth'
 import type { Organizer, User } from '@prisma/client'
 import CredentialsProvider from 'next-auth/providers/credentials'
@@ -5,6 +6,11 @@ import { encode } from 'next-auth/jwt'
 import { randomBytes } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { compare, hash } from 'bcryptjs'
+
+/** next-auth/core/lib/cookie ile aynı mantık: büyük şifreli JWT için parçalı çerez. */
+const SESSION_COOKIE_MAX_BYTES = 4096
+const SESSION_COOKIE_OVERHEAD = 163
+const SESSION_COOKIE_CHUNK_SIZE = SESSION_COOKIE_MAX_BYTES - SESSION_COOKIE_OVERHEAD
 
 /** NextAuth default session max age (seconds). */
 export const SESSION_MAX_AGE_SEC = 30 * 24 * 60 * 60
@@ -37,6 +43,42 @@ export function useSecureAuthCookie(): boolean {
 export function sessionCookieName(): string {
   const prefix = useSecureAuthCookie() ? '__Secure-' : ''
   return `${prefix}next-auth.session-token`
+}
+
+/** NextAuth ile uyumlu: tek veya .0, .1, … parçalı Set-Cookie. */
+export function applySessionTokenCookies(
+  res: NextResponse,
+  token: string,
+  maxAge: number
+): void {
+  const base = sessionCookieName()
+  const secure = useSecureAuthCookie()
+  const opts = {
+    httpOnly: true as const,
+    sameSite: 'lax' as const,
+    path: '/',
+    secure,
+    maxAge,
+  }
+
+  for (let i = 0; i < 12; i++) {
+    res.cookies.set(`${base}.${i}`, '', { ...opts, maxAge: 0 })
+  }
+  res.cookies.set(base, '', { ...opts, maxAge: 0 })
+
+  if (token.length <= SESSION_COOKIE_CHUNK_SIZE) {
+    res.cookies.set(base, token, opts)
+    return
+  }
+
+  const n = Math.ceil(token.length / SESSION_COOKIE_CHUNK_SIZE)
+  for (let i = 0; i < n; i++) {
+    const part = token.slice(
+      i * SESSION_COOKIE_CHUNK_SIZE,
+      (i + 1) * SESSION_COOKIE_CHUNK_SIZE
+    )
+    res.cookies.set(`${base}.${i}`, part, opts)
+  }
 }
 
 /**
@@ -106,7 +148,11 @@ export async function verifyStoredPassword(
 ): Promise<boolean> {
   if (!stored) return false
   if (BCRYPT_HASH_RE.test(stored)) {
-    return compare(plain, stored)
+    try {
+      return await compare(plain, stored)
+    } catch {
+      return false
+    }
   }
   if (plain === stored) {
     try {

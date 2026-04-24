@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import {
+  applySessionTokenCookies,
   authenticateWithPassword,
   createEncodedSessionToken,
   getAuthSecretForSession,
-  sessionCookieName,
   SESSION_MAX_AGE_SEC,
-  useSecureAuthCookie,
 } from '@/lib/auth'
+
+export const runtime = 'nodejs'
 
 function sameOriginOk(request: Request): boolean {
   const origin = request.headers.get('origin')
@@ -56,17 +58,35 @@ export async function POST(request: Request) {
       email: user.email,
     })
 
-    res.cookies.set(sessionCookieName(), token, {
-      httpOnly: true,
-      sameSite: 'lax',
-      path: '/',
-      secure: useSecureAuthCookie(),
-      maxAge: SESSION_MAX_AGE_SEC,
-    })
+    applySessionTokenCookies(res, token, SESSION_MAX_AGE_SEC)
 
     return res
   } catch (e) {
     console.error('[password-signin]', e)
+
+    if (e instanceof Prisma.PrismaClientKnownRequestError) {
+      const dbUnreachable = ['P1001', 'P1017', 'P1000', 'P1012', 'P2024']
+      if (dbUnreachable.includes(e.code)) {
+        return NextResponse.json(
+          {
+            error:
+              'Veritabanına ulaşılamıyor. Supabase kullanıyorsanız havuz bağlantısı kullanın: port 6543 ve adres sonuna ?pgbouncer=true ekleyin (DATABASE_URL).',
+          },
+          { status: 503 }
+        )
+      }
+    }
+
+    if (e instanceof Prisma.PrismaClientInitializationError) {
+      return NextResponse.json(
+        {
+          error:
+            'Veritabanı başlatılamadı. DATABASE_URL değerini ve ortam değişkenlerini kontrol edin.',
+        },
+        { status: 503 }
+      )
+    }
+
     return NextResponse.json(
       {
         error:
