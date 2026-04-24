@@ -4,7 +4,10 @@ import { hashPassword } from '@/lib/auth'
 
 export async function POST(request: Request) {
   try {
-    const { email, password, name, role, ...organizerData } = await request.json()
+    const body = await request.json()
+    const { password, name, role, ...organizerData } = body
+    const email =
+      typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
 
     // Validate required fields
     if (!email || !password || !name) {
@@ -15,8 +18,8 @@ export async function POST(request: Request) {
     }
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
+    const existingUser = await prisma.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
     })
 
     if (existingUser) {

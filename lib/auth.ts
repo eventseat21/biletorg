@@ -4,6 +4,33 @@ import { randomBytes } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { compare, hash } from 'bcryptjs'
 
+/** Stored password is bcrypt, or legacy plain text (e.g. after /api/set-plain). */
+const BCRYPT_HASH_RE = /^\$2[aby]\$\d{2}\$/
+
+export async function verifyStoredPassword(
+  userId: string,
+  plain: string,
+  stored: string | null
+): Promise<boolean> {
+  if (!stored) return false
+  if (BCRYPT_HASH_RE.test(stored)) {
+    return compare(plain, stored)
+  }
+  if (plain === stored) {
+    try {
+      const hashed = await hash(plain, 12)
+      await prisma.user.update({
+        where: { id: userId },
+        data: { password: hashed },
+      })
+    } catch {
+      /* login still succeeds */
+    }
+    return true
+  }
+  return false
+}
+
 export async function hashPassword(password: string): Promise<string> {
   return hash(password, 12)
 }
@@ -42,11 +69,15 @@ export const authOptions: NextAuthOptions = {
           include: { organizer: true },
         })
 
-        if (!user?.password) {
+        if (!user) {
           return null
         }
 
-        const isValid = await compare(credentials.password, user.password)
+        const isValid = await verifyStoredPassword(
+          user.id,
+          credentials.password,
+          user.password
+        )
         if (!isValid) {
           return null
         }
