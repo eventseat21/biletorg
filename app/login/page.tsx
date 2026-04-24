@@ -1,10 +1,8 @@
 'use client'
 import { Suspense, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { getSession, signIn } from 'next-auth/react'
+import { useSearchParams } from 'next/navigation'
 
 function LoginForm() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -17,35 +15,40 @@ function LoginForm() {
     setError('')
 
     try {
-      const callbackUrl = searchParams.get('callbackUrl')
-      const res = await signIn('credentials', {
-        email: email.trim(),
-        password,
-        redirect: false,
+      const res = await fetch('/api/auth/password-signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password }),
+        credentials: 'include',
       })
 
-      if (res?.error) {
-        setError('E-posta veya şifre hatalı')
+      let data: { ok?: boolean; role?: string; error?: string } = {}
+      try {
+        data = await res.json()
+      } catch {
+        setError('Sunucu yanıtı okunamadı')
         return
       }
 
-      const session = await getSession()
-      const role = session?.user?.role
+      if (!res.ok) {
+        setError(data.error || 'E-posta veya şifre hatalı')
+        return
+      }
 
+      const callbackUrl = searchParams.get('callbackUrl')
       if (callbackUrl?.startsWith('/')) {
-        router.push(callbackUrl)
-        router.refresh()
+        window.location.href = callbackUrl
         return
       }
 
+      const role = data.role
       if (role === 'ADMIN') {
-        router.push('/admin')
+        window.location.href = '/admin'
       } else if (role === 'ORGANIZER') {
-        router.push('/organizer')
+        window.location.href = '/organizer'
       } else {
-        router.push('/user/dashboard')
+        window.location.href = '/user/dashboard'
       }
-      router.refresh()
     } catch {
       setError('Bir hata oluştu')
     } finally {

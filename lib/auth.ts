@@ -1,8 +1,100 @@
 import type { NextAuthOptions } from 'next-auth'
+import type { Organizer, User } from '@prisma/client'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import { encode } from 'next-auth/jwt'
 import { randomBytes } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { compare, hash } from 'bcryptjs'
+
+/** NextAuth default session max age (seconds). */
+export const SESSION_MAX_AGE_SEC = 30 * 24 * 60 * 60
+
+const DEV_AUTH_SECRET_FALLBACK =
+  'biletorg-local-dev-nextauth-secret-min-32-chars!'
+
+function credentialString(v: unknown): string {
+  if (typeof v === 'string') return v
+  if (Array.isArray(v) && typeof v[0] === 'string') return v[0]
+  return ''
+}
+
+/** Secret for JWT encode/decode; must match NextAuth `secret` option. */
+export function getAuthSecretForSession(): string {
+  const s = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET
+  if (s && s.length > 0) return s
+  if (process.env.NODE_ENV !== 'production') {
+    return DEV_AUTH_SECRET_FALLBACK
+  }
+  throw new Error('NEXTAUTH_SECRET (or AUTH_SECRET) is required in production')
+}
+
+export function useSecureAuthCookie(): boolean {
+  return (
+    !!process.env.NEXTAUTH_URL?.startsWith('https://') || !!process.env.VERCEL
+  )
+}
+
+export function sessionCookieName(): string {
+  const prefix = useSecureAuthCookie() ? '__Secure-' : ''
+  return `${prefix}next-auth.session-token`
+}
+
+/**
+ * Shared email/password check (DB + bcrypt or legacy plain).
+ * Used by Credentials provider and by /api/auth/password-signin.
+ */
+export async function authenticateWithPassword(
+  emailRaw: unknown,
+  passwordRaw: unknown
+): Promise<(User & { organizer: Organizer | null }) | null> {
+  const email = credentialString(emailRaw).trim().toLowerCase()
+  const password = credentialString(passwordRaw)
+  if (!email || !password) return null
+
+  const user = await prisma.user.findFirst({
+    where: { email: { equals: email, mode: 'insensitive' } },
+    include: { organizer: true },
+  })
+  if (!user) return null
+
+  const ok = await verifyStoredPassword(user.id, password, user.password)
+  return ok ? user : null
+}
+
+export async function createEncodedSessionToken(
+  user: User & { organizer: Organizer | null }
+): Promise<string> {
+  const sessionUser = {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role as 'USER' | 'ORGANIZER' | 'ADMIN',
+    organizerId: user.organizer?.id ?? null,
+    organizerStatus:
+      (user.organizer?.status as
+        | 'PENDING'
+        | 'APPROVED'
+        | 'REJECTED'
+        | 'SUSPENDED'
+        | null) ?? null,
+  }
+
+  const tokenAfterJwtCallback = {
+    name: sessionUser.name,
+    email: sessionUser.email,
+    picture: user.image,
+    sub: sessionUser.id,
+    role: sessionUser.role,
+    organizerId: sessionUser.organizerId,
+    organizerStatus: sessionUser.organizerStatus,
+  }
+
+  return encode({
+    token: tokenAfterJwtCallback,
+    secret: getAuthSecretForSession(),
+    maxAge: SESSION_MAX_AGE_SEC,
+  })
+}
 
 /** Stored password is bcrypt, or legacy plain text (e.g. after /api/set-plain). */
 const BCRYPT_HASH_RE = /^\$2[aby]\$\d{2}\$/
@@ -42,8 +134,14 @@ export function generateToken(bytesLength = 32): string {
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt',
+    maxAge: SESSION_MAX_AGE_SEC,
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret:
+    process.env.NEXTAUTH_SECRET ||
+    process.env.AUTH_SECRET ||
+    (process.env.NODE_ENV !== 'production'
+      ? DEV_AUTH_SECRET_FALLBACK
+      : undefined),
   pages: {
     signIn: '/login',
     error: '/login',
@@ -56,45 +154,29 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        try {
+          const user = await authenticateWithPassword(
+            credentials?.email,
+            credentials?.password
+          )
+          if (!user) return null
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role as 'USER' | 'ORGANIZER' | 'ADMIN',
+            organizerId: user.organizer?.id ?? null,
+            organizerStatus:
+              (user.organizer?.status as
+                | 'PENDING'
+                | 'APPROVED'
+                | 'REJECTED'
+                | 'SUSPENDED'
+                | null) ?? null,
+          }
+        } catch (e) {
+          console.error('[NextAuth authorize]', e)
           return null
-        }
-
-        const email = credentials.email.trim().toLowerCase()
-
-        const user = await prisma.user.findFirst({
-          where: {
-            email: { equals: email, mode: 'insensitive' },
-          },
-          include: { organizer: true },
-        })
-
-        if (!user) {
-          return null
-        }
-
-        const isValid = await verifyStoredPassword(
-          user.id,
-          credentials.password,
-          user.password
-        )
-        if (!isValid) {
-          return null
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role as 'USER' | 'ORGANIZER' | 'ADMIN',
-          organizerId: user.organizer?.id ?? null,
-          organizerStatus:
-            (user.organizer?.status as
-              | 'PENDING'
-              | 'APPROVED'
-              | 'REJECTED'
-              | 'SUSPENDED'
-              | null) ?? null,
         }
       },
     }),
