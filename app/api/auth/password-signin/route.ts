@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import {
   authenticateWithPassword,
   createEncodedSessionToken,
@@ -41,27 +40,39 @@ export async function POST(request: Request) {
     )
   }
 
-  const user = await authenticateWithPassword(body.email, body.password)
-  if (!user) {
+  try {
+    const user = await authenticateWithPassword(body.email, body.password)
+    if (!user) {
+      return NextResponse.json(
+        { error: 'E-posta veya şifre hatalı' },
+        { status: 401 }
+      )
+    }
+
+    const token = await createEncodedSessionToken(user)
+    const res = NextResponse.json({
+      ok: true,
+      role: user.role,
+      email: user.email,
+    })
+
+    res.cookies.set(sessionCookieName(), token, {
+      httpOnly: true,
+      sameSite: 'lax',
+      path: '/',
+      secure: useSecureAuthCookie(),
+      maxAge: SESSION_MAX_AGE_SEC,
+    })
+
+    return res
+  } catch (e) {
+    console.error('[password-signin]', e)
     return NextResponse.json(
-      { error: 'E-posta veya şifre hatalı' },
-      { status: 401 }
+      {
+        error:
+          'Giriş işlemi tamamlanamadı. Veritabanı veya sunucu kaynaklı olabilir.',
+      },
+      { status: 500 }
     )
   }
-
-  const token = await createEncodedSessionToken(user)
-  const cookieStore = cookies()
-  cookieStore.set(sessionCookieName(), token, {
-    httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
-    secure: useSecureAuthCookie(),
-    maxAge: SESSION_MAX_AGE_SEC,
-  })
-
-  return NextResponse.json({
-    ok: true,
-    role: user.role,
-    email: user.email,
-  })
 }

@@ -22,11 +22,19 @@ function LoginForm() {
         credentials: 'include',
       })
 
+      const raw = await res.text()
       let data: { ok?: boolean; role?: string; error?: string } = {}
-      try {
-        data = await res.json()
-      } catch {
-        setError('Sunucu yanıtı okunamadı')
+      if (raw) {
+        try {
+          data = JSON.parse(raw) as typeof data
+        } catch {
+          setError(
+            `Sunucu beklenmeyen yanıt döndü (${res.status}). Sayfayı yenileyip tekrar deneyin.`
+          )
+          return
+        }
+      } else if (!res.ok) {
+        setError(`Sunucu yanıt vermedi (${res.status}).`)
         return
       }
 
