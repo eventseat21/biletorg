@@ -5,13 +5,15 @@ export const dynamic = 'force-dynamic'
 
 async function getAdminStats() {
   try {
-    const [totalUsers, totalOrganizers, totalEvents, totalTickets, pendingApprovals] = await Promise.all([
+    const [totalUsers, totalOrganizers, totalEvents, totalTickets, pendingOrgs, pendingCheckers] = await Promise.all([
       prisma.user.count(),
       prisma.organizer.count(),
       prisma.event.count(),
       prisma.ticket.count(),
-      prisma.organizer.count({ where: { status: 'PENDING' } })
+      prisma.organizer.count({ where: { status: 'PENDING' } }),
+      prisma.ticketChecker.count({ where: { status: 'PENDING' } })
     ])
+    const pendingApprovals = pendingOrgs + pendingCheckers
 
     const revenue = await prisma.order.aggregate({
       where: { paymentStatus: 'COMPLETED' },
@@ -73,8 +75,8 @@ export default async function AdminDashboard() {
           <h3 className="text-sm font-medium text-yellow-700">Onay Bekleyen</h3>
           <p className="text-3xl font-bold text-yellow-600 mt-2">{stats.pendingApprovals}</p>
           {stats.pendingApprovals > 0 && (
-            <Link href="/admin/organizers" className="text-sm text-yellow-600 hover:text-yellow-700 mt-2 block">
-              İncele →
+            <Link href="/admin/approvals" className="text-sm text-yellow-600 hover:text-yellow-700 mt-2 block">
+              Onaylara git →
             </Link>
           )}
         </div>

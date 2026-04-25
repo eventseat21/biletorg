@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import {
   applySessionTokenCookies,
-  authenticateWithPassword,
+  authenticateWithPasswordResult,
   createEncodedSessionToken,
   getAuthSecretForSession,
   SESSION_MAX_AGE_SEC,
@@ -42,15 +42,35 @@ export async function POST(request: Request) {
     )
   }
 
+  const messages = {
+    PENDING:
+      'Hesabınız henüz yönetici onayından geçmedi. Onay e-postasından sonra tekrar giriş yapabilirsiniz.',
+    REJECTED: 'Başvurunuz reddedildi. Ayrıntı için destekle iletişime geçin.',
+    SUSPENDED: 'Hesabınız askıya alındı. Ayrıntı için destekle iletişime geçin.',
+  } as const
+
   try {
-    const user = await authenticateWithPassword(body.email, body.password)
-    if (!user) {
+    const result = await authenticateWithPasswordResult(
+      body.email,
+      body.password
+    )
+    if (!result.ok) {
+      if (result.reason === 'not_active') {
+        return NextResponse.json(
+          {
+            error: messages[result.notActive],
+            code: `account_${result.notActive.toLowerCase()}`,
+          },
+          { status: 403 }
+        )
+      }
       return NextResponse.json(
         { error: 'E-posta veya şifre hatalı' },
         { status: 401 }
       )
     }
 
+    const { user } = result
     const token = await createEncodedSessionToken(user)
     const res = NextResponse.json({
       ok: true,

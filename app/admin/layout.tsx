@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import Link from 'next/link'
-import { Users, Building2, Calendar, BarChart3, Settings } from 'lucide-react'
+import { Users, Building2, Calendar, BarChart3, Settings, Inbox } from 'lucide-react'
 
 export default async function AdminLayout({
   children,
@@ -17,6 +17,7 @@ export default async function AdminLayout({
 
   const navItems = [
     { href: '/admin', label: 'Dashboard', icon: BarChart3 },
+    { href: '/admin/approvals', label: 'Onaylar', icon: Inbox },
     { href: '/admin/organizers', label: 'Organizatörler', icon: Building2 },
     { href: '/admin/users', label: 'Kullanıcılar', icon: Users },
     { href: '/admin/events', label: 'Etkinlikler', icon: Calendar },

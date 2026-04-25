@@ -10,18 +10,20 @@ export default function OrganizerRegisterPage() {
   
   const [step, setStep] = useState(1)
   const [formData, setFormData] = useState({
-    // Step 1: Account
+    // Step 1: Yetkili + giriş
     name: '',
     email: '',
+    userPhone: '',
     password: '',
     confirmPassword: '',
-    // Step 2: Company
+    // Step 2: Şirket / marka
     companyName: '',
+    organizationDisplayName: '',
     companyPhone: '',
     taxNumber: '',
     website: '',
     description: '',
-    // Step 3: Address
+    // Step 3: Adres
     address: '',
     city: '',
     country: 'Türkiye',
@@ -37,14 +39,22 @@ export default function OrganizerRegisterPage() {
         setError('Tüm alanları doldurun')
         return
       }
+      if (!formData.userPhone?.trim()) {
+        setError('Telefon numarası zorunludur')
+        return
+      }
       if (formData.password !== formData.confirmPassword) {
         setError('Şifreler eşleşmiyor')
         return
       }
     }
     if (step === 2) {
-      if (!formData.companyName) {
-        setError('Şirket adı zorunlu')
+      if (!formData.companyName?.trim()) {
+        setError('Firma adı zorunludur')
+        return
+      }
+      if (!formData.companyPhone?.trim()) {
+        setError('Firma / iş yeri telefonu zorunludur')
         return
       }
     }
@@ -66,7 +76,9 @@ export default function OrganizerRegisterPage() {
           email: formData.email,
           password: formData.password,
           role: 'ORGANIZER',
+          userPhone: formData.userPhone,
           companyName: formData.companyName,
+          organizationDisplayName: formData.organizationDisplayName,
           companyPhone: formData.companyPhone,
           taxNumber: formData.taxNumber,
           website: formData.website,
@@ -99,7 +111,8 @@ export default function OrganizerRegisterPage() {
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Başvurunuz Alındı!</h2>
           <p className="text-gray-600 mb-6">
-            Organizatör başvurunuz incelemeye alındı. Onaylandığında e-posta ile bilgilendirileceksiniz.
+            Yönetici onayından sonra aynı e-posta ve şifre ile giriş yapabilirsiniz. Onay
+            süreci tamamlanana kadar giriş kabul edilmez.
           </p>
           <Link href="/" className="btn-primary inline-block">
             Ana Sayfaya Dön
@@ -116,7 +129,11 @@ export default function OrganizerRegisterPage() {
           <Link href="/" className="text-3xl font-bold text-primary-600">
             BiletOrg
           </Link>
-          <p className="text-gray-600 mt-2">Organizatör Başvurusu</p>
+          <p className="text-gray-600 mt-2">Organizatör kayıt formu</p>
+          <p className="text-sm text-gray-500 mt-2 max-w-md mx-auto">
+            Bu sayfa sadece başvuru içindir. Giriş (e-posta + şifre) ayrı sayfadadır; onay
+            sonrası yönetim paneline giriş yapabilirsiniz.
+          </p>
         </div>
 
         {/* Progress */}
@@ -170,6 +187,19 @@ export default function OrganizerRegisterPage() {
                   />
                 </div>
                 <div>
+                  <label className="label">Telefon (yetkili) *</label>
+                  <input
+                    type="tel"
+                    value={formData.userPhone}
+                    onChange={(e) =>
+                      setFormData({ ...formData, userPhone: e.target.value })
+                    }
+                    className="input"
+                    placeholder="+90 …"
+                    required
+                  />
+                </div>
+                <div>
                   <label className="label">Şifre *</label>
                   <input
                     type="password"
@@ -201,7 +231,7 @@ export default function OrganizerRegisterPage() {
                 </div>
                 
                 <div>
-                  <label className="label">Şirket Adı *</label>
+                  <label className="label">Firma adı (yasal / ticari ünvan) *</label>
                   <input
                     type="text"
                     value={formData.companyName}
@@ -211,12 +241,36 @@ export default function OrganizerRegisterPage() {
                   />
                 </div>
                 <div>
-                  <label className="label">Telefon</label>
+                  <label className="label">
+                    Organizasyon adı (yayında görünecek isim, farklıysa)
+                  </label>
+                  <p className="text-xs text-gray-500 mb-1">
+                    Firma adıyla aynıysa boş bırakın; farklı bir marka adıyla görünecekseniz
+                    yazın.
+                  </p>
+                  <input
+                    type="text"
+                    value={formData.organizationDisplayName}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        organizationDisplayName: e.target.value,
+                      })
+                    }
+                    className="input"
+                    placeholder="Örn. Yaz Festivali"
+                  />
+                </div>
+                <div>
+                  <label className="label">Firma / iş yeri telefonu *</label>
                   <input
                     type="tel"
                     value={formData.companyPhone}
-                    onChange={(e) => setFormData({ ...formData, companyPhone: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, companyPhone: e.target.value })
+                    }
                     className="input"
+                    required
                   />
                 </div>
                 <div>

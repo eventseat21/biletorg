@@ -8,12 +8,13 @@ async function main() {
   const adminPassword = await bcrypt.hash('Mehmetcan21!', 12)
   const admin = await prisma.user.upsert({
     where: { email: 'admin@biletorg.com' },
-    update: {},
+    update: { status: 'ACTIVE' },
     create: {
       email: 'admin@biletorg.com',
       name: 'Admin User',
       password: adminPassword,
       role: 'ADMIN',
+      status: 'ACTIVE',
       emailVerified: new Date(),
     },
   })
@@ -22,12 +23,13 @@ async function main() {
   const orgPassword = await bcrypt.hash('Mehmetcan21!', 12)
   const organizerUser = await prisma.user.upsert({
     where: { email: 'organizer@example.com' },
-    update: {},
+    update: { status: 'ACTIVE' },
     create: {
       email: 'organizer@example.com',
       name: 'Demo Organizer',
       password: orgPassword,
       role: 'ORGANIZER',
+      status: 'ACTIVE',
       emailVerified: new Date(),
     },
   })
@@ -39,6 +41,7 @@ async function main() {
     create: {
       userId: organizerUser.id,
       companyName: 'Demo Event Company',
+      organizationDisplayName: 'Demo Events',
       companyEmail: 'organizer@example.com',
       companyPhone: '+90 555 123 4567',
       taxNumber: '1234567890',

@@ -9,7 +9,8 @@ import {
   BarChart3, 
   Settings, 
   LogOut,
-  Users
+  Users,
+  Wand2
 } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import clsx from 'clsx'
@@ -18,6 +19,7 @@ const navItems = [
   { href: '/organizer', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/organizer/events', label: 'Etkinlikler', icon: Calendar },
   { href: '/organizer/halls', label: 'Salonlar', icon: MapPin },
+  { href: '/organizer/halls/wizard', label: 'Salon Plani Wizard', icon: Wand2 },
   { href: '/organizer/accounting', label: 'Muhasebe', icon: BarChart3 },
   { href: '/organizer/settings', label: 'Ayarlar', icon: Settings },
 ]

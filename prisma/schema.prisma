@@ -14,12 +14,16 @@ model User {
   password      String?
   name          String?
   image         String?
+  phone         String?
+  /// USER: normal; ORGANIZER / CHECKER: kayıt sonrası PENDING, admin onayıyla ACTIVE
   role          String    @default("USER")
+  /// PENDING | ACTIVE | REJECTED | SUSPENDED
   status        String    @default("ACTIVE")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   organizer     Organizer?
+  ticketChecker TicketChecker?
   orders        Order[]
   tickets       Ticket[]
   passwordResets PasswordReset[]
@@ -33,6 +37,8 @@ model Organizer {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   companyName     String
+  /// Firma ünvanından farklıysa (yayında görünecek marka / organ. adı)
+  organizationDisplayName String?
   companyEmail    String
   companyPhone    String?
   taxNumber       String?
@@ -57,6 +63,23 @@ model Organizer {
   updatedAt       DateTime    @updatedAt
 
   @@map("organizers")
+}
+
+/// Bilet kontrolörü — admin onayından önce User.status = PENDING
+model TicketChecker {
+  id        String  @id @default(cuid())
+  userId    String  @unique
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phone     String
+  /// PENDING | APPROVED | REJECTED | SUSPENDED
+  status    String  @default("PENDING")
+  approvedAt   DateTime?
+  approvedBy   String?
+  rejectionReason String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("ticket_checkers")
 }
 
 model Hall {

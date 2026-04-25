@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import Link from 'next/link'
-import { Plus, MapPin, Users, ArrowRight } from 'lucide-react'
+import { Plus, MapPin, Users, ArrowRight, Wand2 } from 'lucide-react'
 
 async function getHalls(organizerId: string) {
   return prisma.hall.findMany({
@@ -30,10 +30,16 @@ export default async function HallsPage() {
           <h1 className="text-3xl font-bold text-gray-900">Salonlar</h1>
           <p className="text-gray-600 mt-1">Etkinlikleriniz için salon tasarımları</p>
         </div>
-        <Link href="/organizer/halls/new" className="btn-primary inline-flex items-center gap-2">
-          <Plus size={20} />
-          Yeni Salon
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/organizer/halls/wizard" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100">
+            <Wand2 size={18} />
+            Salon Planı Wizard
+          </Link>
+          <Link href="/organizer/halls/new" className="btn-primary inline-flex items-center gap-2">
+            <Plus size={20} />
+            Yeni Salon
+          </Link>
+        </div>
       </div>
 
       {halls.length === 0 ? (

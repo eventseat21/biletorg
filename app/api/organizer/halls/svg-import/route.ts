@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { parseSVGSeats } from '@/lib/svg-seat-parser'
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions)
@@ -16,149 +17,137 @@ export async function POST(request: Request) {
     const name = formData.get('name') as string
     const description = formData.get('description') as string
     const address = formData.get('address') as string
+    const categoriesRaw = formData.get('categories') as string | null
+    const blockMapRaw = formData.get('blockCategoryMap') as string | null
 
     if (!svgFile || !name) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Read SVG content
+    if (svgFile.type !== 'image/svg+xml') {
+      return NextResponse.json({ error: 'Only SVG file is supported' }, { status: 400 })
+    }
+
     const svgContent = await svgFile.text()
+    const { seats, summary } = parseSVGSeats(svgContent)
 
-    // Parse SVG to extract seats
-    const seats = parseSVGSeats(svgContent)
+    const categories = parseCategories(categoriesRaw)
+    const blockCategoryMap = parseBlockCategoryMap(blockMapRaw)
+    const typedSeats =
+      blockCategoryMap.size > 0
+        ? assignSeatTypesByBlockMap(seats, blockCategoryMap)
+        : assignSeatTypesByRatio(seats, categories)
 
-    // Calculate dimensions from SVG
-    const stageDimensions = extractSVGBounds(svgContent)
-
-    // Create hall
     const hall = await prisma.hall.create({
       data: {
         organizerId: session.user.organizerId,
         name,
-        description,
-        address,
-        stageWidth: stageDimensions.width || 800,
-        stageHeight: stageDimensions.height || 600,
-        svgSource: svgContent, // Store original SVG
+        description: description || null,
+        address: address || null,
+        capacity: typedSeats.length,
+        stageWidth: summary.width || 800,
+        stageHeight: summary.height || 600,
+        svgSource: svgContent,
         source: 'svg',
-      }
+      },
     })
 
-    // Create seats from SVG
-    if (seats.length > 0) {
+    if (typedSeats.length > 0) {
       await prisma.seat.createMany({
-        data: seats.map((seat, index) => ({
+        data: typedSeats.map((seat) => ({
           hallId: hall.id,
-          row: seat.row || String.fromCharCode(65 + Math.floor(index / 20)),
-          number: seat.number || ((index % 20) + 1).toString(),
+          row: seat.row,
+          number: seat.number,
           x: seat.x,
           y: seat.y,
-          type: seat.type || 'NORMAL',
+          type: seat.type,
           width: seat.width || 30,
           height: seat.height || 30,
-          shape: seat.shape || 'circle',
-          svgId: seat.svgId, // Original SVG element ID
-        }))
+          shape: seat.shape,
+          svgId: seat.svgId,
+        })),
       })
     }
 
-    return NextResponse.json(hall)
+    return NextResponse.json({
+      hall,
+      summary: {
+        ...summary,
+        categories,
+        blockCategoryMap: Object.fromEntries(blockCategoryMap),
+      },
+    })
   } catch (error) {
     console.error('Error importing SVG hall:', error)
     return NextResponse.json({ error: 'Failed to import SVG' }, { status: 500 })
   }
 }
 
-// Parse SVG to extract seat positions
-function parseSVGSeats(svgContent: string): Array<{
-  x: number
-  y: number
-  width: number
-  height: number
-  shape: string
-  type: string
-  row?: string
-  number?: string
-  svgId?: string
-}> {
-  const seats: any[] = []
-  
-  // Parse circles
-  const circleRegex = /<circle[^>]*cx=["']([^"']+)["'][^>]*cy=["']([^"']+)["'][^>]*r=["']([^"']+)["'][^>]*>/gi
-  let match
-  let seatIndex = 0
-  
-  while ((match = circleRegex.exec(svgContent)) !== null) {
-    const cx = parseFloat(match[1])
-    const cy = parseFloat(match[2])
-    const r = parseFloat(match[3])
-    
-    seats.push({
-      x: cx - r,
-      y: cy - r,
-      width: r * 2,
-      height: r * 2,
-      shape: 'circle',
-      type: 'NORMAL',
-      row: String.fromCharCode(65 + Math.floor(seatIndex / 20)),
-      number: ((seatIndex % 20) + 1).toString(),
-      svgId: `seat-${seatIndex}`,
-    })
-    seatIndex++
+function parseCategories(raw: string | null): Array<{ type: string; ratio: number }> {
+  if (!raw) {
+    return [
+      { type: 'VIP', ratio: 0.2 },
+      { type: 'PREMIUM', ratio: 0.3 },
+      { type: 'NORMAL', ratio: 0.5 },
+    ]
   }
-
-  // Parse rectangles
-  const rectRegex = /<rect[^>]*x=["']([^"']+)["'][^>]*y=["']([^"']+)["'][^>]*width=["']([^"']+)["'][^>]*height=["']([^"']+)["'][^>]*>/gi
-  
-  while ((match = rectRegex.exec(svgContent)) !== null) {
-    const x = parseFloat(match[1])
-    const y = parseFloat(match[2])
-    const width = parseFloat(match[3])
-    const height = parseFloat(match[4])
-    
-    // Skip if too large (probably not a seat)
-    if (width > 100 || height > 100) continue
-    
-    seats.push({
-      x,
-      y,
-      width,
-      height,
-      shape: 'rect',
-      type: 'NORMAL',
-      row: String.fromCharCode(65 + Math.floor(seatIndex / 20)),
-      number: ((seatIndex % 20) + 1).toString(),
-      svgId: `seat-${seatIndex}`,
-    })
-    seatIndex++
+  try {
+    const parsed = JSON.parse(raw) as Array<{ type?: string; ratio?: number }>
+    const cleaned = parsed
+      .map((x) => ({
+        type: String(x.type || '').toUpperCase(),
+        ratio: Number(x.ratio || 0),
+      }))
+      .filter((x) => x.type && Number.isFinite(x.ratio) && x.ratio > 0)
+    const total = cleaned.reduce((acc, c) => acc + c.ratio, 0)
+    if (!cleaned.length || total <= 0) throw new Error('invalid')
+    return cleaned.map((c) => ({ ...c, ratio: c.ratio / total }))
+  } catch {
+    return [
+      { type: 'VIP', ratio: 0.2 },
+      { type: 'PREMIUM', ratio: 0.3 },
+      { type: 'NORMAL', ratio: 0.5 },
+    ]
   }
-
-  // Parse g.seat groups
-  const groupRegex = /<g[^>]*class=["'][^"']*seat[^"']*["'][^>]*>/gi
-  // Note: Full parsing of group content would require DOM parsing
-  // This is a simplified version
-
-  return seats
 }
 
-// Extract SVG bounds
-function extractSVGBounds(svgContent: string): { width: number; height: number } {
-  const viewBoxMatch = svgContent.match(/viewBox=["'][^"']+["']/i)
-  if (viewBoxMatch) {
-    const values = viewBoxMatch[0].match(/[\d.]+/g)
-    if (values && values.length >= 4) {
-      return {
-        width: parseFloat(values[2]),
-        height: parseFloat(values[3]),
-      }
+function assignSeatTypesByRatio<T extends { type: string }>(
+  seats: T[],
+  categories: Array<{ type: string; ratio: number }>
+): T[] {
+  if (!seats.length) return seats
+  let cursor = 0
+  return seats.map((seat, i) => {
+    const progress = (i + 1) / seats.length
+    while (
+      cursor < categories.length - 1 &&
+      progress > categories.slice(0, cursor + 1).reduce((acc, c) => acc + c.ratio, 0)
+    ) {
+      cursor++
     }
-  }
+    return { ...seat, type: categories[cursor].type }
+  })
+}
 
-  const widthMatch = svgContent.match(/width=["']([^"']+)["']/i)
-  const heightMatch = svgContent.match(/height=["']([^"']+)["']/i)
-  
-  return {
-    width: widthMatch ? parseFloat(widthMatch[1]) : 800,
-    height: heightMatch ? parseFloat(heightMatch[1]) : 600,
+function parseBlockCategoryMap(raw: string | null): Map<string, string> {
+  if (!raw) return new Map()
+  try {
+    const parsed = JSON.parse(raw) as Record<string, string>
+    const entries = Object.entries(parsed)
+      .map(([block, type]) => [String(block), String(type).toUpperCase()] as const)
+      .filter(([block, type]) => block && type)
+    return new Map(entries)
+  } catch {
+    return new Map()
   }
+}
+
+function assignSeatTypesByBlockMap<T extends { type: string; block?: string }>(
+  seats: T[],
+  blockCategoryMap: Map<string, string>
+): T[] {
+  return seats.map((seat) => ({
+    ...seat,
+    type: blockCategoryMap.get(seat.block || '') || seat.type || 'NORMAL',
+  }))
 }

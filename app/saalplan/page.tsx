@@ -43,7 +43,7 @@ export default function SaalplanPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/90 via-indigo-900/70 to-indigo-900/40" />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="max-w-3xl">
             <div>
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-medium mb-6">
                 <Sparkles className="w-4 h-4" />
@@ -87,77 +87,6 @@ export default function SaalplanPage() {
                 </span>
               </div>
             </div>
-            <div className="relative">
-              <div className="relative bg-white rounded-2xl shadow-2xl p-6 border border-gray-100">
-                {/* Mock Hall Editor */}
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="font-semibold text-gray-900">Ana Salon Editörü</span>
-                    <div className="flex gap-2">
-                      <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                        <ZoomIn className="w-4 h-4 text-gray-600" />
-                      </div>
-                      <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                        <Move className="w-4 h-4 text-gray-600" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bg-white rounded-lg border-2 border-dashed border-gray-200 h-64 flex flex-col items-center justify-center relative overflow-hidden">
-                    {/* Stage */}
-                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-2 rounded-lg text-sm font-medium">
-                      SAHNE
-                    </div>
-                    {/* Seats Grid */}
-                    <div className="mt-12 grid grid-cols-10 gap-2">
-                      {Array.from({ length: 60 }).map((_, i) => {
-                        const row = Math.floor(i / 10)
-                        const isVIP = row < 2
-                        const isPremium = row >= 2 && row < 4
-                        return (
-                          <div 
-                            key={i} 
-                            className={`w-6 h-6 rounded-full cursor-pointer hover:scale-110 transition-transform ${
-                              isVIP ? 'bg-yellow-400 border-2 border-yellow-500' : 
-                              isPremium ? 'bg-blue-400 border-2 border-blue-500' : 
-                              'bg-gray-300 border-2 border-gray-400'
-                            }`}
-                            title={`${String.fromCharCode(65 + row)}${(i % 10) + 1}`}
-                          />
-                        )
-                      })}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 mt-4 text-sm">
-                    <span className="flex items-center gap-1">
-                      <div className="w-3 h-3 rounded-full bg-yellow-400 border border-yellow-500" /> VIP (A-B)
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <div className="w-3 h-3 rounded-full bg-blue-400 border border-blue-500" /> Premium (C-D)
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <div className="w-3 h-3 rounded-full bg-gray-300 border border-gray-400" /> Normal
-                    </span>
-                  </div>
-                </div>
-              </div>
-              {/* Floating Elements */}
-              <div className="absolute -top-4 -right-4 bg-white rounded-xl shadow-lg p-3 border border-gray-100">
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                    <Check className="w-4 h-4 text-green-600" />
-                  </div>
-                  <span className="font-medium text-gray-900">120 koltuk</span>
-                </div>
-              </div>
-              <div className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg p-3 border border-gray-100">
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                    <Grid3X3 className="w-4 h-4 text-primary-600" />
-                  </div>
-                  <span className="font-medium text-gray-900">6x20 Düzen</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -175,80 +104,162 @@ export default function SaalplanPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Method 1: Manual */}
-            <div className="group bg-gradient-to-br from-primary-50 to-white rounded-2xl p-8 border border-primary-100 hover:border-primary-300 hover:shadow-xl transition-all">
-              <div className="w-14 h-14 bg-primary-100 text-primary-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <MousePointer className="w-7 h-7" />
-              </div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">
-                Manuel Çizim
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Sürükle-bırak arayüzü ile koltukları tek tek yerleştirin. 
-                Küçük mekanlar ve özel düzenler için ideal.
-              </p>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <Check className="w-5 h-5 text-primary-500" />
-                  <span>Tam kontrol üzerinde düzenleme</span>
-                </li>
-                <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <Check className="w-5 h-5 text-primary-500" />
-                  <span>Satır/sütun otomatik oluşturma</span>
-                </li>
-                <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <Check className="w-5 h-5 text-primary-500" />
-                  <span>Koltuk şekli ve boyut özelleştirme</span>
-                </li>
-                <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <Check className="w-5 h-5 text-primary-500" />
-                  <span>Boşluk ve koridor tanımlama</span>
-                </li>
-              </ul>
-              <div className="bg-white rounded-xl p-4 border border-primary-100">
-                <p className="text-sm text-gray-500 mb-2">En iyi kullanım:</p>
-                <p className="text-sm font-medium text-gray-900">
-                  Küçük tiyatro, toplantı salonu, sınıf düzeni
-                </p>
+          <div className="space-y-8">
+            {/* Method 1: SVG Import (üstte) */}
+            <div className="group rounded-2xl border border-green-100 bg-gradient-to-br from-green-50 to-white p-8 transition-all hover:border-green-300 hover:shadow-xl">
+              <div className="grid items-start gap-8 lg:grid-cols-2">
+                <div className="overflow-hidden rounded-xl border border-green-100 bg-black">
+                  <img
+                    src="/saalplan-svg-sample.png"
+                    alt="SVG salon planı örneği"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div>
+                  <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-green-100 text-green-600 transition-transform group-hover:scale-110">
+                    <Upload className="w-7 h-7" />
+                  </div>
+                  <h3 className="mb-4 text-2xl font-semibold text-gray-900">
+                    SVG Import
+                  </h3>
+                  <p className="mb-6 text-gray-600">
+                    Mevcut salon planınızı (SVG formatında) yükleyin. Sistem
+                    otomatik olarak koltukları tanır ve interaktif hale getirir.
+                  </p>
+                  <ul className="mb-8 space-y-3">
+                    <li className="flex items-center gap-3 text-sm text-gray-600">
+                      <Check className="w-5 h-5 text-green-500" />
+                      <span>Saniyeler içinde hazır plan</span>
+                    </li>
+                    <li className="flex items-center gap-3 text-sm text-gray-600">
+                      <Check className="w-5 h-5 text-green-500" />
+                      <span>Otomatik circle/rect tanıma</span>
+                    </li>
+                    <li className="flex items-center gap-3 text-sm text-gray-600">
+                      <Check className="w-5 h-5 text-green-500" />
+                      <span>Vektör kalitesinde görsel</span>
+                    </li>
+                    <li className="flex items-center gap-3 text-sm text-gray-600">
+                      <Check className="w-5 h-5 text-green-500" />
+                      <span>Sonradan düzenleme imkanı</span>
+                    </li>
+                  </ul>
+                  <div className="rounded-xl border border-green-100 bg-white p-4">
+                    <p className="mb-2 text-sm text-gray-500">En iyi kullanım:</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      Stadyum, konser salonu, sinema, büyük tiyatro
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Method 2: SVG Import */}
-            <div className="group bg-gradient-to-br from-green-50 to-white rounded-2xl p-8 border border-green-100 hover:border-green-300 hover:shadow-xl transition-all">
-              <div className="w-14 h-14 bg-green-100 text-green-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <Upload className="w-7 h-7" />
-              </div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">
-                SVG Import
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Mevcut salon planınızı (SVG formatında) yükleyin. 
-                Sistem otomatik olarak koltukları tanır ve interaktif hale getirir.
-              </p>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <Check className="w-5 h-5 text-green-500" />
-                  <span>Saniyeler içinde hazır plan</span>
-                </li>
-                <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <Check className="w-5 h-5 text-green-500" />
-                  <span>Otomatik circle/rect tanıma</span>
-                </li>
-                <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <Check className="w-5 h-5 text-green-500" />
-                  <span>Vektör kalitesinde görsel</span>
-                </li>
-                <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <Check className="w-5 h-5 text-green-500" />
-                  <span>Sonradan düzenleme imkanı</span>
-                </li>
-              </ul>
-              <div className="bg-white rounded-xl p-4 border border-green-100">
-                <p className="text-sm text-gray-500 mb-2">En iyi kullanım:</p>
-                <p className="text-sm font-medium text-gray-900">
-                  Stadyum, konser salonu, sinema, büyük tiyatro
-                </p>
+            {/* Method 2: Manual (sağda Ana Salon Editörü görseli) */}
+            <div className="group rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white p-8 transition-all hover:border-primary-300 hover:shadow-xl">
+              <div className="grid items-start gap-8 lg:grid-cols-2">
+                <div>
+                  <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-primary-100 text-primary-600 transition-transform group-hover:scale-110">
+                    <MousePointer className="w-7 h-7" />
+                  </div>
+                  <h3 className="mb-4 text-2xl font-semibold text-gray-900">
+                    Manuel Çizim
+                  </h3>
+                  <p className="mb-6 text-gray-600">
+                    Sürükle-bırak arayüzü ile koltukları tek tek yerleştirin.
+                    Küçük mekanlar ve özel düzenler için ideal.
+                  </p>
+                  <ul className="mb-8 space-y-3">
+                    <li className="flex items-center gap-3 text-sm text-gray-600">
+                      <Check className="w-5 h-5 text-primary-500" />
+                      <span>Tam kontrol üzerinde düzenleme</span>
+                    </li>
+                    <li className="flex items-center gap-3 text-sm text-gray-600">
+                      <Check className="w-5 h-5 text-primary-500" />
+                      <span>Satır/sütun otomatik oluşturma</span>
+                    </li>
+                    <li className="flex items-center gap-3 text-sm text-gray-600">
+                      <Check className="w-5 h-5 text-primary-500" />
+                      <span>Koltuk şekli ve boyut özelleştirme</span>
+                    </li>
+                    <li className="flex items-center gap-3 text-sm text-gray-600">
+                      <Check className="w-5 h-5 text-primary-500" />
+                      <span>Boşluk ve koridor tanımlama</span>
+                    </li>
+                  </ul>
+                  <div className="rounded-xl border border-primary-100 bg-white p-4">
+                    <p className="mb-2 text-sm text-gray-500">En iyi kullanım:</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      Küçük tiyatro, toplantı salonu, sınıf düzeni
+                    </p>
+                  </div>
+                </div>
+                <div className="relative">
+                  <div className="relative bg-white rounded-2xl shadow-2xl p-6 border border-gray-100">
+                    <div className="bg-gray-50 rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="font-semibold text-gray-900">Ana Salon Editörü</span>
+                        <div className="flex gap-2">
+                          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                            <ZoomIn className="w-4 h-4 text-gray-600" />
+                          </div>
+                          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                            <Move className="w-4 h-4 text-gray-600" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-white rounded-lg border-2 border-dashed border-gray-200 h-64 flex flex-col items-center justify-center relative overflow-hidden">
+                        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-2 rounded-lg text-sm font-medium">
+                          SAHNE
+                        </div>
+                        <div className="mt-12 grid grid-cols-10 gap-2">
+                          {Array.from({ length: 60 }).map((_, i) => {
+                            const row = Math.floor(i / 10)
+                            const isVIP = row < 2
+                            const isPremium = row >= 2 && row < 4
+                            return (
+                              <div
+                                key={`manual-preview-${i}`}
+                                className={`w-6 h-6 rounded-full cursor-pointer hover:scale-110 transition-transform ${
+                                  isVIP ? 'bg-yellow-400 border-2 border-yellow-500' :
+                                  isPremium ? 'bg-blue-400 border-2 border-blue-500' :
+                                  'bg-gray-300 border-2 border-gray-400'
+                                }`}
+                                title={`${String.fromCharCode(65 + row)}${(i % 10) + 1}`}
+                              />
+                            )
+                          })}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 mt-4 text-sm">
+                        <span className="flex items-center gap-1">
+                          <div className="w-3 h-3 rounded-full bg-yellow-400 border border-yellow-500" /> VIP (A-B)
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <div className="w-3 h-3 rounded-full bg-blue-400 border border-blue-500" /> Premium (C-D)
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <div className="w-3 h-3 rounded-full bg-gray-300 border border-gray-400" /> Normal
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="absolute -top-4 -right-4 bg-white rounded-xl shadow-lg p-3 border border-gray-100">
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <Check className="w-4 h-4 text-green-600" />
+                      </div>
+                      <span className="font-medium text-gray-900">120 koltuk</span>
+                    </div>
+                  </div>
+                  <div className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg p-3 border border-gray-100">
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                        <Grid3X3 className="w-4 h-4 text-primary-600" />
+                      </div>
+                      <span className="font-medium text-gray-900">6x20 Düzen</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -256,8 +267,16 @@ export default function SaalplanPage() {
       </section>
 
       {/* SVG Workflow */}
-      <section className="py-20 bg-gradient-to-br from-gray-900 to-gray-800 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative overflow-hidden py-20 text-white">
+        <div className="absolute inset-0">
+          <img
+            src="/saalplan-workflow-bg.png"
+            alt=""
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-900/75 via-gray-900/65 to-gray-900/55" />
+        </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-full text-sm font-medium mb-6">
               <Upload className="w-4 h-4" />
@@ -275,10 +294,10 @@ export default function SaalplanPage() {
             {/* Step 1 */}
             <div className="relative">
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center h-full">
-                <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center text-xl font-bold mx-auto mb-4">
+                <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center text-xl font-bold text-white mx-auto mb-4">
                   1
                 </div>
-                <Upload className="w-8 h-8 text-primary-400 mx-auto mb-3" />
+                <Upload className="w-8 h-8 text-yellow-300 mx-auto mb-3" />
                 <h4 className="font-semibold mb-2">SVG Yükle</h4>
                 <p className="text-sm text-gray-400">
                   Organizatör salon planını SVG olarak yükler
@@ -290,10 +309,10 @@ export default function SaalplanPage() {
             {/* Step 2 */}
             <div className="relative">
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center h-full">
-                <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center text-xl font-bold mx-auto mb-4">
+                <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center text-xl font-bold text-white mx-auto mb-4">
                   2
                 </div>
-                <Eye className="w-8 h-8 text-primary-400 mx-auto mb-3" />
+                <Eye className="w-8 h-8 text-yellow-300 mx-auto mb-3" />
                 <h4 className="font-semibold mb-2">Tanıma</h4>
                 <p className="text-sm text-gray-400">
                   Sistem circle ve rect elementlerini algılar
@@ -305,10 +324,10 @@ export default function SaalplanPage() {
             {/* Step 3 */}
             <div className="relative">
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center h-full">
-                <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center text-xl font-bold mx-auto mb-4">
+                <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center text-xl font-bold text-white mx-auto mb-4">
                   3
                 </div>
-                <Palette className="w-8 h-8 text-primary-400 mx-auto mb-3" />
+                <Palette className="w-8 h-8 text-yellow-300 mx-auto mb-3" />
                 <h4 className="font-semibold mb-2">Kategori Ata</h4>
                 <p className="text-sm text-gray-400">
                   VIP, Premium, Normal kategorileri belirle
@@ -320,10 +339,10 @@ export default function SaalplanPage() {
             {/* Step 4 */}
             <div className="relative">
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center h-full">
-                <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center text-xl font-bold mx-auto mb-4">
+                <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center text-xl font-bold text-white mx-auto mb-4">
                   4
                 </div>
-                <Save className="w-8 h-8 text-primary-400 mx-auto mb-3" />
+                <Save className="w-8 h-8 text-yellow-300 mx-auto mb-3" />
                 <h4 className="font-semibold mb-2">JSON Export</h4>
                 <p className="text-sm text-gray-400">
                   Koltuk verileri JSON formatında kaydedilir
@@ -335,10 +354,10 @@ export default function SaalplanPage() {
             {/* Step 5 */}
             <div>
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center h-full">
-                <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center text-xl font-bold mx-auto mb-4">
+                <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center text-xl font-bold text-white mx-auto mb-4">
                   5
                 </div>
-                <QrCode className="w-8 h-8 text-primary-400 mx-auto mb-3" />
+                <QrCode className="w-8 h-8 text-yellow-300 mx-auto mb-3" />
                 <h4 className="font-semibold mb-2">Satışa Açıl</h4>
                 <p className="text-sm text-gray-400">
                   Müşteri koltuk seçimi yapar ve satın alır

@@ -39,7 +39,9 @@ function LoginForm() {
       }
 
       if (!res.ok) {
-        setError(data.error || 'E-posta veya şifre hatalı')
+        setError(
+          data.error || 'E-posta veya şifre hatalı'
+        )
         return
       }
 
@@ -49,11 +51,13 @@ function LoginForm() {
         return
       }
 
-      const role = data.role
+      const role = data.role as string
       if (role === 'ADMIN') {
         window.location.href = '/admin'
       } else if (role === 'ORGANIZER') {
         window.location.href = '/organizer'
+      } else if (role === 'CHECKER') {
+        window.location.href = '/checker'
       } else {
         window.location.href = '/user/dashboard'
       }
@@ -77,6 +81,10 @@ function LoginForm() {
           </div>
         )}
 
+        <p className="text-center text-sm text-gray-500 mb-4">
+          Giriş: e-posta ve şifre. Yeni hesap yalnızca organizatör veya bilet kontrolörü
+          başvurusu ile açılır; admin onayı gerekir.
+        </p>
         <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-md">
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -112,6 +120,21 @@ function LoginForm() {
             {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
           </button>
         </form>
+        <div className="mt-6 text-center text-sm text-gray-600 space-y-2">
+          <p>
+            <a href="/organizer/register" className="text-primary-600 font-medium">
+              Organizatör başvurusu
+            </a>
+            {' · '}
+            <a href="/checker/register" className="text-primary-600 font-medium">
+              Kontrolör başvurusu
+            </a>
+            {' · '}
+            <a href="/" className="text-gray-500">
+              Ana sayfa
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   )
