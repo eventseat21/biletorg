@@ -3,7 +3,6 @@ import {
   Check, 
   ArrowRight, 
   Sparkles,
-  Ticket,
   Zap,
   Shield,
   Clock,
@@ -29,51 +28,51 @@ import {
   Wallet
 } from 'lucide-react'
 import Header from '@/components/header'
+import { SiteFooter } from '@/components/site-footer'
 
 export default function BenefitsPage() {
   return (
     <div className="min-h-screen bg-white">
 <Header />
 
-      {/* Hero Section with Background Image */}
-      <section className="relative pt-32 pb-20">
-        {/* Background Image */}
+      {/* Hero — kendi arka plan görseli; filigran ana sayfa ile aynı (indigo → mor) */}
+      <section className="relative text-white">
         <div className="absolute inset-0">
-          <img 
-            src="/concert-benefits.jpg" 
-            alt="Concert stage" 
-            className="w-full h-full object-cover"
+          <img
+            src="/benefits-hero.png"
+            alt=""
+            className="h-full w-full object-cover object-top"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-indigo-900/60 via-indigo-900/40 to-white/80" />
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/30 to-purple-900/20" />
         </div>
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="container mx-auto px-4 py-24 md:py-32 relative text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-medium mb-6">
             <Sparkles className="w-4 h-4" />
             Neden BiletOrg?
           </div>
-          <h1 className="text-4xl lg:text-6xl font-bold text-white mb-6 drop-shadow-lg">
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
             Etkinlik Düzenlemenin{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-400">
               En Akıllı Yolu
             </span>
           </h1>
-          <p className="text-xl text-white/90 max-w-2xl mx-auto mb-8 drop-shadow">
-            Teknoloji, güvenlik ve kullanıcı deneyimini bir araya getirerek 
+          <p className="text-xl md:text-2xl text-primary-100 max-w-2xl mx-auto mb-8 leading-relaxed">
+            Teknoloji, güvenlik ve kullanıcı deneyimini bir araya getirerek
             etkinlik organizasyonunu kolaylaştırıyoruz.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Link 
-              href="/organizer/register" 
+            <Link
+              href="/organizer/register"
               className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 rounded-xl font-semibold hover:from-yellow-500 hover:to-orange-600 transition-all shadow-lg"
             >
-              Hemen Başla
+              Organizatör başvurusu
               <ArrowRight className="w-5 h-5" />
             </Link>
-            <Link 
-              href="/coming-soon" 
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm text-white border border-white/30 rounded-xl font-semibold hover:bg-white/20 transition-all"
+            <Link
+              href="/coming-soon"
+              className="inline-flex items-center gap-2 px-8 py-4 border-2 border-white text-white rounded-xl font-semibold hover:bg-white/10 transition-all"
             >
-              Demo İzle
+              Demo izle
             </Link>
           </div>
         </div>
@@ -431,72 +430,28 @@ export default function BenefitsPage() {
             Etkinliğinizi Bir Üst Seviyeye Taşıyın
           </h2>
           <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-            Ücretsiz hesap oluşturun, ilk etkinliğinizi dakikalar içinde kurun 
-            ve profesyonel biletleme deneyimini keşfedin.
+            Organizatör başvurunuzu gönderin; onay sonrası etkinlik ve biletleme
+            özelliklerine erişin.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Link 
-              href="/organizer/register" 
+            <Link
+              href="/organizer/register"
               className="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary-600 rounded-xl font-semibold hover:bg-gray-100 transition-all shadow-lg"
             >
-              Ücretsiz Başla
+              Organizatör başvurusu
               <ArrowRight className="w-5 h-5" />
             </Link>
-            <Link 
-              href="/pricing" 
+            <Link
+              href="/pricing"
               className="inline-flex items-center gap-2 px-8 py-4 bg-primary-500 text-white border-2 border-primary-400 rounded-xl font-semibold hover:bg-primary-400 transition-all"
             >
-              Fiyatlandırmayı Gör
+              Fiyatlandırmayı gör
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-blue-900 text-blue-100 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-                  <Ticket className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xl font-bold text-white">BiletOrg</span>
-              </div>
-              <p className="text-sm">
-                Profesyonel etkinlik yönetimi ve bilet satış platformu.
-              </p>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Ürün</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/ticketshop" className="hover:text-white">Ticketshop</Link></li>
-                <li><Link href="/saalplan" className="hover:text-white">Salon Planı</Link></li>
-                <li><Link href="/pricing" className="hover:text-white">Fiyatlandırma</Link></li>
-                <li><Link href="/benefits" className="hover:text-white">Avantajlar</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Destek</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/faq" className="hover:text-white">SSS</Link></li>
-                <li><Link href="/support" className="hover:text-white">Destek Al</Link></li>
-                <li><Link href="/contact" className="hover:text-white">İletişim</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Hukuk</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/coming-soon" className="hover:text-white">Gizlilik</Link></li>
-                <li><Link href="/coming-soon" className="hover:text-white">Kullanım Şartları</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 pt-8 text-sm text-center">
-            © 2024 BiletOrg. Tüm hakları saklıdır.
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }

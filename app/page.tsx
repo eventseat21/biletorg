@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Calendar, Ticket, BarChart3, MapPin, ChevronRight, Star } from 'lucide-react'
 import Header from '@/components/header'
+import { SiteFooter } from '@/components/site-footer'
 
 export default function HomePage() {
   return (
@@ -24,9 +25,9 @@ export default function HomePage() {
             <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
               Etkinliklerinizi<br />Profesyonel Yönetin
             </h1>
-            <p className="text-xl md:text-2xl text-primary-100 mb-8 leading-relaxed">
-              Bilet satışından muhasebeye kadar her şey tek platformda. 
-              Organizatörler için tasarlanmış, kullanıcı dostu çözüm.
+              <p className="text-xl md:text-2xl text-primary-100 mb-8 leading-relaxed">
+              Bilet satışından muhasebeye kadar tek platform. Organizatör ve ekip
+              hesapları yönetici onayı ile açılır.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link href="/organizer/register" className="btn bg-white text-primary-600 hover:bg-primary-50 px-8 py-3 text-lg font-semibold">
@@ -152,8 +153,8 @@ export default function HomePage() {
                 Hemen Başlamaya Hazır mısınız?
               </h2>
               <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto drop-shadow">
-                Ücretsiz hesap oluşturun, ilk etkinliğinizi oluşturmaya başlayın. 
-                Kredi kartı gerekmez.
+                Organizatör başvurunuzu gönderin; onay sonrası etkinliklerinizi yönetmeye
+                başlayın. Bireysel bilet alıcı üyeliği yoktur.
               </p>
               <Link 
                 href="/organizer/register" 
@@ -167,45 +168,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-blue-900 text-blue-100 py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="text-2xl font-bold text-white mb-4">BiletOrg</div>
-              <p className="text-sm">
-                Organizatörler için profesyonel bilet yönetim sistemi.
-              </p>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Platform</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/events" className="hover:text-white">Etkinlikler</Link></li>
-                <li><Link href="/organizer/register" className="hover:text-white">Organizatör Ol</Link></li>
-                <li><Link href="/pricing" className="hover:text-white">Fiyatlandırma</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Destek</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/faq" className="hover:text-white">SSS</Link></li>
-                <li><Link href="/support" className="hover:text-white">Destek Al</Link></li>
-                <li><Link href="/contact" className="hover:text-white">İletişim</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Yasal</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/coming-soon" className="hover:text-white">Kullanım Şartları</Link></li>
-                <li><Link href="/coming-soon" className="hover:text-white">Gizlilik Politikası</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 pt-8 text-sm text-center">
-            © 2024 BiletOrg. Tüm hakları saklıdır.
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }

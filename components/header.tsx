@@ -4,122 +4,132 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Ticket, Menu, X } from 'lucide-react'
 import { useState } from 'react'
+import clsx from 'clsx'
+
+const navLinks = [
+  { href: '/', label: 'Ana sayfa' },
+  { href: '/events', label: 'Etkinlikler' },
+  { href: '/ticketshop', label: 'Ticketshop' },
+  { href: '/saalplan', label: 'Salon Planı' },
+  { href: '/pricing', label: 'Fiyatlandırma' },
+  { href: '/benefits', label: 'Avantajlar' },
+  { href: '/faq', label: 'SSS' },
+  { href: '/support', label: 'Destek' },
+  { href: '/contact', label: 'İletişim' },
+]
+
+function isNavActive(pathname: string, href: string) {
+  if (href === '/') return pathname === '/'
+  return pathname === href || pathname.startsWith(`${href}/`)
+}
 
 export default function Header() {
   const pathname = usePathname()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-
-  const navLinks = [
-    { href: '/events', label: 'Etkinlikler' },
-    { href: '/ticketshop', label: 'Ticketshop' },
-    { href: '/saalplan', label: 'Salon Planı' },
-    { href: '/pricing', label: 'Fiyatlandırma' },
-    { href: '/benefits', label: 'Avantajlar' },
-  ]
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center">
-              <Ticket className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-800 bg-clip-text text-transparent">
-              BiletOrg
-            </span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`text-sm font-medium transition-colors ${
-                  pathname === link.href
-                    ? 'text-indigo-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-            <Link
-              href="/organizer/register"
-              className="text-sm font-medium text-gray-600 hover:text-gray-900"
-            >
-              Organizatör Ol
+    <>
+      <header
+        className={clsx(
+          'fixed top-0 left-0 right-0 z-50',
+          'bg-white border-b border-gray-200 shadow-sm',
+          'supports-[backdrop-filter]:bg-white'
+        )}
+      >
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center min-h-16 py-1 gap-4">
+            <Link href="/" className="flex items-center gap-2 min-w-0 shrink-0">
+              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center shrink-0">
+                <Ticket className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-800 bg-clip-text text-transparent truncate">
+                BiletOrg
+              </span>
             </Link>
-            <Link
-              href="/login"
-              className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Giriş Yap
-            </Link>
-            <Link
-              href="/register"
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
-            >
-              Üye Ol
-            </Link>
-          </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden p-2 text-gray-600"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
-
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-100">
-            <div className="flex flex-col gap-4">
+            <div className="hidden lg:flex flex-1 flex-wrap items-center justify-end gap-x-3 gap-y-1 min-w-0">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`text-sm font-medium ${
-                    pathname === link.href
+                  className={`text-sm font-medium transition-colors whitespace-nowrap ${
+                    isNavActive(pathname, link.href)
                       ? 'text-indigo-600'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
-                  onClick={() => setIsMenuOpen(false)}
                 >
                   {link.label}
                 </Link>
               ))}
               <Link
-                href="/organizer/register"
-                className="text-sm font-medium text-gray-600 hover:text-gray-900"
-                onClick={() => setIsMenuOpen(false)}
+                href="/login"
+                className="px-3 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shrink-0"
               >
-                Organizatör Ol
+                Giriş
               </Link>
-              <div className="flex gap-4 pt-4 border-t border-gray-100">
+            </div>
+
+            <button
+              type="button"
+              className="lg:hidden flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 shrink-0"
+              aria-expanded={mobileOpen}
+              aria-label={mobileOpen ? 'Menüyü kapat' : 'Menüyü aç'}
+              onClick={() => setMobileOpen((o) => !o)}
+            >
+              {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+        </nav>
+      </header>
+
+      {mobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-[60]">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/60"
+            aria-label="Menüyü kapat"
+            onClick={() => setMobileOpen(false)}
+          />
+          <div className="absolute top-0 right-0 w-[min(100vw-2rem,20rem)] h-full bg-white shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+              <span className="font-semibold text-gray-900">Menü</span>
+              <button
+                type="button"
+                className="p-2 rounded-lg border border-gray-200 text-gray-800 hover:bg-gray-50"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Kapat"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-1 bg-white">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={`block px-3 py-3 rounded-lg text-sm font-medium ${
+                    isNavActive(pathname, link.href)
+                      ? 'bg-indigo-50 text-indigo-700'
+                      : 'text-gray-800 hover:bg-gray-50'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <div className="pt-4 mt-4 border-t border-gray-100">
                 <Link
                   href="/login"
-                  className="flex-1 px-4 py-2 text-center text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => setMobileOpen(false)}
+                  className="block px-3 py-3 text-center text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
-                  Giriş Yap
-                </Link>
-                <Link
-                  href="/register"
-                  className="flex-1 px-4 py-2 text-center text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Üye Ol
+                  Giriş
                 </Link>
               </div>
             </div>
           </div>
-        )}
-      </div>
-    </nav>
+        </div>
+      )}
+    </>
   )
 }

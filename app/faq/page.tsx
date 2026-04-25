@@ -18,6 +18,7 @@ import {
   Headphones
 } from 'lucide-react'
 import Header from '@/components/header'
+import { SiteFooter } from '@/components/site-footer'
 
 const categories = [
   {
@@ -206,42 +207,43 @@ export default function FAQPage() {
     <div className="min-h-screen bg-white">
 <Header />
 
-      {/* Hero with Background Image */}
-      <section className="relative pt-32 pb-12">
-        {/* Background Image */}
+      {/* Hero — SSS için ayrı görsel (concert-faq) */}
+      <section className="relative text-white">
         <div className="absolute inset-0">
-          <img 
-            src="/concert-faq.jpg" 
-            alt="Concert" 
+          <img
+            src="/concert-faq.jpg"
+            alt=""
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-indigo-900/50 via-indigo-900/30 to-white" />
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/70 to-purple-900/50" />
         </div>
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="container mx-auto px-4 py-24 md:py-32 relative text-center max-w-4xl">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-medium mb-6">
             <HelpCircle className="w-4 h-4" />
             Yardım Merkezi
           </div>
-          <h1 className="text-4xl lg:text-5xl font-bold text-white mb-6 drop-shadow-lg">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight text-white">
             Sık Sorulan Sorular
           </h1>
-          <p className="text-xl text-white/90 max-w-2xl mx-auto mb-8 drop-shadow">
-            BiletOrg hakkında merak ettiğiniz tüm soruların cevapları burada.
+          <p className="text-xl md:text-2xl text-primary-100 max-w-2xl mx-auto leading-relaxed">
+            BiletOrg hakkında merak ettiğiniz soruların cevapları burada.
           </p>
+        </div>
+      </section>
 
-          {/* Search */}
-          <div className="relative max-w-xl mx-auto mb-12">
+      {/* Arama ve kategoriler — hero altında, beyaz zemin */}
+      <section className="bg-white border-b border-gray-100 py-8 md:py-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="relative max-w-xl mx-auto mb-10">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
               placeholder="Soru ara..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+              className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none bg-white"
             />
           </div>
-
-          {/* Category Icons Grid - Eventim Light Style */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 max-w-5xl mx-auto">
             {categories.map((cat) => {
               const Icon = cat.icon
@@ -249,29 +251,36 @@ export default function FAQPage() {
               return (
                 <button
                   key={cat.id}
+                  type="button"
                   onClick={() => handleCategoryClick(cat.id)}
                   className={`group flex flex-col items-center justify-center gap-3 rounded-xl transition-all duration-300 ${
-                    isActive 
-                      ? 'bg-blue-500 text-white shadow-lg scale-105 h-32 py-4' 
-                      : 'bg-white border-2 border-gray-100 hover:border-blue-200 hover:bg-blue-50 h-24 py-3'
+                    isActive
+                      ? 'bg-blue-500 text-white shadow-lg scale-105 h-32 py-4'
+                      : 'bg-gray-50 border-2 border-gray-200 hover:border-blue-200 hover:bg-blue-50/50 h-24 py-3'
                   }`}
                 >
-                  <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 ${
-                    isActive 
-                      ? 'bg-white/20' 
-                      : 'bg-gray-100 group-hover:bg-blue-100'
-                  }`}>
-                    <Icon className={`w-7 h-7 transition-all duration-300 ${
-                      isActive 
-                        ? 'text-white' 
-                        : 'text-black group-hover:text-blue-600'
-                    }`} />
+                  <div
+                    className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 ${
+                      isActive
+                        ? 'bg-white/20'
+                        : 'bg-white group-hover:bg-blue-100'
+                    }`}
+                  >
+                    <Icon
+                      className={`w-7 h-7 transition-all duration-300 ${
+                        isActive
+                          ? 'text-white'
+                          : 'text-gray-800 group-hover:text-blue-600'
+                      }`}
+                    />
                   </div>
-                  <span className={`text-sm font-medium transition-colors duration-300 text-center ${
-                    isActive 
-                      ? 'text-white' 
-                      : 'text-gray-700 group-hover:text-blue-700'
-                  }`}>
+                  <span
+                    className={`text-sm font-medium transition-colors duration-300 text-center ${
+                      isActive
+                        ? 'text-white'
+                        : 'text-gray-700 group-hover:text-blue-700'
+                    }`}
+                  >
                     {cat.name}
                   </span>
                 </button>
@@ -429,49 +438,7 @@ export default function FAQPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-blue-900 text-blue-100 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
-                  <Ticket className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xl font-bold text-white">BiletOrg</span>
-              </div>
-              <p className="text-sm">Profesyonel etkinlik yönetimi ve bilet satış platformu.</p>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Ürün</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/ticketshop" className="hover:text-white">Ticketshop</Link></li>
-                <li><Link href="/saalplan" className="hover:text-white">Salon Planı</Link></li>
-                <li><Link href="/pricing" className="hover:text-white">Fiyatlandırma</Link></li>
-                <li><Link href="/benefits" className="hover:text-white">Avantajlar</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Destek</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/faq" className="hover:text-white">SSS</Link></li>
-                <li><Link href="/support" className="hover:text-white">Destek Al</Link></li>
-                <li><Link href="/contact" className="hover:text-white">İletişim</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Hukuk</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/coming-soon" className="hover:text-white">Gizlilik</Link></li>
-                <li><Link href="/coming-soon" className="hover:text-white">Kullanım Şartları</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 pt-8 text-sm text-center">
-            © 2024 BiletOrg. Tüm hakları saklıdır.
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }

@@ -24,6 +24,7 @@ import {
   RotateCcw
 } from 'lucide-react'
 import Header from '@/components/header'
+import { SiteFooter } from '@/components/site-footer'
 
 export default function SaalplanPage() {
   return (
@@ -60,18 +61,18 @@ export default function SaalplanPage() {
                 ve biletleme sistemine entegre edin. Manuel çizim veya SVG import seçenekleri.
               </p>
               <div className="flex flex-wrap gap-4">
-                <Link 
-                  href="/organizer/halls/new" 
+                <Link
+                  href="/organizer/register"
                   className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-semibold hover:from-primary-700 hover:to-primary-800 transition-all shadow-lg shadow-primary-200"
                 >
-                  Salon Oluştur
+                  Organizatör başvurusu
                   <ArrowRight className="w-5 h-5" />
                 </Link>
-                <Link 
-                  href="/coming-soon" 
+                <Link
+                  href="/coming-soon"
                   className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm text-white border border-white/30 rounded-xl font-semibold hover:bg-white/20 transition-all"
                 >
-                  Demo Görüntüle
+                  Demo görüntüle
                 </Link>
               </div>
               <div className="flex items-center gap-6 mt-8 text-sm text-white/80">
@@ -614,74 +615,23 @@ export default function SaalplanPage() {
       <section className="py-20 bg-gradient-to-br from-primary-600 to-primary-700 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl lg:text-4xl font-bold mb-6">
-            İlk Salon Planınızı Oluşturun
+            İlk salon planınızı oluşturun
           </h2>
           <p className="text-xl text-primary-100 mb-8">
-            Ücretsiz hesap açın, salonunuzu tanımlayın ve etkinliklerinizi 
-            görsel koltuk seçimi ile satışa açın.
+            Organizatör hesabı onaylandıktan sonra salona girip salon planı ve koltukları
+            yönetebilirsiniz. Başvuru için aşağıdaki formu kullanın.
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link 
-              href="/organizer/register" 
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary-700 rounded-xl font-semibold hover:bg-gray-100 transition-all shadow-lg"
-            >
-              Ücretsiz Başla
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link 
-              href="/coming-soon" 
-              className="inline-flex items-center gap-2 px-8 py-4 bg-primary-500 text-white border-2 border-primary-400 rounded-xl font-semibold hover:bg-primary-400 transition-all"
-            >
-              Editörü Dene
-            </Link>
-          </div>
+          <Link
+            href="/organizer/register"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary-700 rounded-xl font-semibold hover:bg-gray-100 transition-all shadow-lg"
+          >
+            Organizatör başvurusu
+            <ArrowRight className="w-5 h-5" />
+          </Link>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-blue-900 text-blue-100 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-                  <Ticket className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xl font-bold text-white">BiletOrg</span>
-              </div>
-              <p className="text-sm">
-                Profesyonel etkinlik yönetimi ve bilet satış platformu.
-              </p>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Ürün</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/ticketshop" className="hover:text-white">Ticketshop</Link></li>
-                <li><Link href="/saalplan" className="hover:text-white">Salon Planı</Link></li>
-                <li><Link href="/coming-soon" className="hover:text-white">Özellikler</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Destek</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/faq" className="hover:text-white">SSS</Link></li>
-                <li><Link href="/support" className="hover:text-white">Destek Al</Link></li>
-                <li><Link href="/contact" className="hover:text-white">İletişim</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Hukuk</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/coming-soon" className="hover:text-white">Gizlilik</Link></li>
-                <li><Link href="/coming-soon" className="hover:text-white">Kullanım Şartları</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 pt-8 text-sm text-center">
-            © 2024 BiletOrg. Tüm hakları saklıdır.
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }

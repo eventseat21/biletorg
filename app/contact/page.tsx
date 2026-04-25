@@ -77,18 +77,29 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-{/* Navigation */}
-       <Header />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <Header />
+      <section className="relative min-h-[220px] text-white md:min-h-[280px]">
+        <div className="absolute inset-0">
+          <img
+            src="/contact-hero.png"
+            alt=""
+            className="h-full w-full object-cover object-left"
+          />
+        </div>
+        <div className="relative z-10 mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
+          <h1 className="mb-4 text-4xl font-bold text-white drop-shadow-sm md:text-5xl">
+            İletişim
+          </h1>
+          <p className="max-w-xl text-xl text-white/95 drop-shadow-sm">
+            Sorularınız mı var? Bizimle iletişime geçin, en kısa sürede size yardımcı
+            olalım.
+          </p>
+        </div>
+      </section>
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
           {/* Contact Info */}
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">İletişim</h1>
-            <p className="text-xl text-gray-600 mb-8">
-              Sorularınız mı var? Bizimle iletişime geçin, en kısa sürede size yardımcı olalım.
-            </p>
-
             <div className="space-y-6">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">

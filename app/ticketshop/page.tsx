@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { 
   ShoppingCart, 
   Palette, 
@@ -18,112 +17,64 @@ import {
   Smartphone
 } from 'lucide-react'
 import Header from '@/components/header'
+import { SiteFooter } from '@/components/site-footer'
 
 export default function TicketshopPage() {
   return (
 <div className="min-h-screen bg-white">
        <Header />
 
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 bg-gradient-to-b from-primary-50/50 to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-100 text-primary-700 rounded-full text-sm font-medium mb-6">
-                <Sparkles className="w-4 h-4" />
-                Yeni: SVG Salon Import
-              </div>
-              <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
-                Kendi{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-800">
-                  Bilet Mağazanızı
-                </span>{' '}
-                Oluşturun
-              </h1>
-              <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                Etkinlikleriniz için profesyonel, markanıza özel bir bilet satış sayfası oluşturun. 
-                Dakikalar içinde kurulum, saniyeler içinde satış.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <Link 
-                  href="/organizer/register" 
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-semibold hover:from-primary-700 hover:to-primary-800 transition-all shadow-lg shadow-primary-200"
-                >
-                  Hemen Başla
-                  <ArrowRight className="w-5 h-5" />
-                </Link>
-                <Link 
-                  href="/coming-soon" 
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-white text-gray-700 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-all"
-                >
-                  Demo Görüntüle
-                </Link>
-              </div>
-              <div className="flex items-center gap-6 mt-8 text-sm text-gray-500">
-                <span className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-green-500" /> Ücretsiz kurulum
-                </span>
-                <span className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-green-500" /> %5 komisyon
-                </span>
-                <span className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-green-500" /> 7/24 destek
-                </span>
-              </div>
-            </div>
-            <div className="relative">
-              <div className="relative bg-white rounded-2xl shadow-2xl p-6 border border-gray-100">
-                {/* Mock Ticket Shop UI */}
-                <div className="bg-gray-50 rounded-xl p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <Ticket className="w-5 h-5 text-purple-600" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">Yıldız Konseri 2024</p>
-                        <p className="text-sm text-gray-500">15 Mart 2024 • 20:00</p>
-                      </div>
-                    </div>
-                    <span className="text-lg font-bold text-primary-600">₺350</span>
-                  </div>
-                  <div className="border-t border-gray-200 pt-4">
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="bg-white p-3 rounded-lg text-center border-2 border-primary-500">
-                        <p className="text-sm text-gray-600">VIP</p>
-                        <p className="font-bold text-gray-900">₺500</p>
-                        <p className="text-xs text-green-600">40 kalan</p>
-                      </div>
-                      <div className="bg-white p-3 rounded-lg text-center border border-gray-200">
-                        <p className="text-sm text-gray-600">Premium</p>
-                        <p className="font-bold text-gray-900">₺350</p>
-                        <p className="text-xs text-gray-500">80 kalan</p>
-                      </div>
-                      <div className="bg-white p-3 rounded-lg text-center border border-gray-200">
-                        <p className="text-sm text-gray-600">Normal</p>
-                        <p className="font-bold text-gray-900">₺200</p>
-                        <p className="text-xs text-gray-500">120 kalan</p>
-                      </div>
-                    </div>
-                  </div>
-                  <button className="w-full py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-lg font-semibold">
-                    Bilet Al
-                  </button>
-                </div>
-              </div>
-              {/* Floating Badge */}
-              <div className="absolute -bottom-4 -right-4 bg-white rounded-xl shadow-lg p-4 border border-gray-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                    <Shield className="w-6 h-6 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Güvenli Ödeme</p>
-                    <p className="text-sm text-gray-500">256-bit SSL</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+      {/* Hero — diğer sayfalarla aynı filigran; tiyatro görseli */}
+      <section className="relative text-white">
+        <div className="absolute inset-0">
+          <img
+            src="/ticketshop-hero.png"
+            alt=""
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/70 to-purple-900/50" />
+        </div>
+        <div className="container relative mx-auto max-w-4xl px-4 py-24 text-center md:py-32">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm">
+            <Sparkles className="h-4 w-4" />
+            Yeni: SVG salon import
+          </div>
+          <h1 className="mb-6 text-4xl font-bold leading-tight text-white md:text-6xl">
+            Kendi{' '}
+            <span className="bg-gradient-to-r from-yellow-300 to-orange-400 bg-clip-text text-transparent">
+              bilet mağazanızı
+            </span>{' '}
+            oluşturun
+          </h1>
+          <p className="mx-auto mb-8 max-w-2xl text-xl leading-relaxed text-primary-100 md:text-2xl">
+            Etkinlikleriniz için profesyonel, markanıza özel bilet satış sayfası. Hızlı
+            kurulum, güvenli ödeme.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link
+              href="/organizer/register"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-primary-700 px-8 py-4 font-semibold text-white shadow-lg shadow-primary-200 transition-all hover:from-primary-700 hover:to-primary-800"
+            >
+              Organizatör başvurusu
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+            <Link
+              href="/coming-soon"
+              className="inline-flex items-center gap-2 rounded-xl border-2 border-white px-8 py-4 font-semibold text-white transition-all hover:bg-white/10"
+            >
+              Demo görüntüle
+            </Link>
+          </div>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-primary-100/95">
+            <span className="flex items-center gap-2">
+              <Check className="h-4 w-4 shrink-0 text-emerald-300" /> Aylık abonelik yok
+            </span>
+            <span className="flex items-center gap-2">
+              <Check className="h-4 w-4 shrink-0 text-emerald-300" /> %5 komisyon
+            </span>
+            <span className="flex items-center gap-2">
+              <Check className="h-4 w-4 shrink-0 text-emerald-300" /> 7/24 destek
+            </span>
           </div>
         </div>
       </section>
@@ -217,8 +168,19 @@ export default function TicketshopPage() {
       </section>
 
       {/* Seat Selection Highlight */}
-      <section className="py-20 bg-gradient-to-br from-gray-900 to-gray-800 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative overflow-hidden py-20 text-white">
+        <div className="absolute inset-0" aria-hidden>
+          <img
+            src="/ticketshop-seat-section.png"
+            alt=""
+            className="h-full w-full object-cover object-center"
+          />
+          <div
+            className="absolute inset-0 bg-gradient-to-br from-gray-900/90 via-gray-900/80 to-gray-900/70"
+            aria-hidden
+          />
+        </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-full text-sm font-medium mb-6">
@@ -316,8 +278,8 @@ export default function TicketshopPage() {
                   Hesap Oluşturun
                 </h3>
                 <p className="text-gray-600">
-                  Ücretsiz organizatör hesabı açın, şirket bilgilerinizi ekleyin 
-                  ve onay alın.
+                  Organizatör başvurunuzu gönderin, şirket bilgilerinizi ekleyin
+                  ve yönetici onayını bekleyin.
                 </p>
               </div>
               <ArrowRight className="hidden md:block absolute top-1/2 -right-4 w-8 h-8 text-gray-300" />
@@ -357,106 +319,107 @@ export default function TicketshopPage() {
         </div>
       </section>
 
-      {/* Pricing Teaser */}
+      {/* Örnek mağaza + Şeffaf Fiyatlandırma */}
       <section className="py-20 bg-gradient-to-b from-primary-50 to-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-            Şeffaf Fiyatlandırma
-          </h2>
-          <p className="text-xl text-gray-600 mb-12">
-            Gizli maliyet yok, aylık ücret yok. Sadece satılan bilet başına %5 komisyon.
-          </p>
-
-          <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
-            <div className="flex flex-col md:flex-row items-center justify-center gap-8 mb-8">
-              <div className="text-center">
-                <p className="text-sm text-gray-500 mb-1">Bilet Fiyatı</p>
-                <p className="text-3xl font-bold text-gray-900">₺100</p>
-              </div>
-              <div className="text-gray-300">
-                <ArrowRight className="w-8 h-8" />
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-gray-500 mb-1">Siz Kazanırsınız</p>
-                <p className="text-3xl font-bold text-green-600">₺95</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-gray-500 mb-1">Platform</p>
-                <p className="text-3xl font-bold text-primary-600">₺5</p>
-              </div>
-            </div>
-            <p className="text-gray-500 text-sm">
-              Örnek: ₺100'lük bilet satışında %5 komisyon (₺5) alınır, 
-              kalan ₺95 organizatöre aktarılır.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-6">
-            Etkinliğinizi Hemen Satışa Açın
-          </h2>
-          <p className="text-xl text-gray-600 mb-8">
-            Ücretsiz hesap oluşturun, ilk etkinliğinizi ekleyin ve dakikalar içinde 
-            bilet satmaya başlayın.
-          </p>
-          <Link 
-            href="/organizer/register" 
-            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-semibold hover:from-primary-700 hover:to-primary-800 transition-all shadow-lg shadow-primary-200"
-          >
-            Ücretsiz Başla
-            <ArrowRight className="w-5 h-5" />
-          </Link>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-blue-900 text-blue-100 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-                  <Ticket className="w-5 h-5 text-white" />
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid items-start gap-12 lg:grid-cols-2 lg:gap-16">
+            <div className="text-center lg:text-left">
+              <h2 className="mb-4 text-3xl font-bold text-gray-900 lg:text-4xl">
+                Örnek bilet mağazası
+              </h2>
+              <div className="relative mx-auto max-w-md lg:mx-0">
+                <div className="relative rounded-2xl border border-gray-100 bg-white p-6 shadow-2xl">
+                  <div className="space-y-4 rounded-xl bg-gray-50 p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
+                          <Ticket className="h-5 w-5 text-purple-600" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">Yıldız Konseri 2024</p>
+                          <p className="text-sm text-gray-500">15 Mart 2024 · 20:00</p>
+                        </div>
+                      </div>
+                      <span className="text-lg font-bold text-primary-600">₺350</span>
+                    </div>
+                    <div className="border-t border-gray-200 pt-4">
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="rounded-lg border-2 border-primary-500 bg-white p-3 text-center">
+                          <p className="text-sm text-gray-600">VIP</p>
+                          <p className="font-bold text-gray-900">₺500</p>
+                          <p className="text-xs text-green-600">40 kalan</p>
+                        </div>
+                        <div className="rounded-lg border border-gray-200 bg-white p-3 text-center">
+                          <p className="text-sm text-gray-600">Premium</p>
+                          <p className="font-bold text-gray-900">₺350</p>
+                          <p className="text-xs text-gray-500">80 kalan</p>
+                        </div>
+                        <div className="rounded-lg border border-gray-200 bg-white p-3 text-center">
+                          <p className="text-sm text-gray-600">Normal</p>
+                          <p className="font-bold text-gray-900">₺200</p>
+                          <p className="text-xs text-gray-500">120 kalan</p>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="w-full rounded-lg bg-gradient-to-r from-primary-600 to-primary-700 py-3 font-semibold text-white"
+                    >
+                      Bilet al
+                    </button>
+                  </div>
                 </div>
-                <span className="text-xl font-bold text-white">BiletOrg</span>
+                <div className="absolute -bottom-2 -right-2 rounded-xl border border-gray-100 bg-white p-4 shadow-lg md:-bottom-4 md:-right-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+                      <Shield className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">Güvenli ödeme</p>
+                      <p className="text-sm text-gray-500">256-bit SSL</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <p className="text-sm">
-                Profesyonel etkinlik yönetimi ve bilet satış platformu.
+            </div>
+
+            <div className="text-center lg:text-left">
+              <h2 className="mb-4 text-3xl font-bold text-gray-900 lg:text-4xl">
+                Şeffaf Fiyatlandırma
+              </h2>
+              <p className="mb-8 text-xl text-gray-600">
+                Gizli maliyet yok, aylık ücret yok. Sadece satılan bilet başına %5
+                komisyon.
               </p>
+              <div className="rounded-2xl bg-white p-8 shadow-xl md:p-12">
+                <div className="mb-8 flex flex-col items-center justify-center gap-8 md:flex-row">
+                  <div className="text-center">
+                    <p className="mb-1 text-sm text-gray-500">Bilet fiyatı</p>
+                    <p className="text-3xl font-bold text-gray-900">₺100</p>
+                  </div>
+                  <div className="text-gray-300">
+                    <ArrowRight className="h-8 w-8" />
+                  </div>
+                  <div className="text-center">
+                    <p className="mb-1 text-sm text-gray-500">Siz kazanırsınız</p>
+                    <p className="text-3xl font-bold text-green-600">₺95</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="mb-1 text-sm text-gray-500">Platform</p>
+                    <p className="text-3xl font-bold text-primary-600">₺5</p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500">
+                  Örnek: ₺100’lük bilet satışında %5 komisyon (₺5) alınır, kalan ₺95
+                  organizatöre aktarılır.
+                </p>
+              </div>
             </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Ürün</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/coming-soon" className="hover:text-white">Özellikler</Link></li>
-                <li><Link href="/pricing" className="hover:text-white">Fiyatlandırma</Link></li>
-                <li><Link href="/ticketshop" className="hover:text-white">Ticketshop</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Destek</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/faq" className="hover:text-white">SSS</Link></li>
-                <li><Link href="/support" className="hover:text-white">Destek Al</Link></li>
-                <li><Link href="/contact" className="hover:text-white">İletişim</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Hukuk</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/coming-soon" className="hover:text-white">Gizlilik</Link></li>
-                <li><Link href="/coming-soon" className="hover:text-white">Kullanım Şartları</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 pt-8 text-sm text-center">
-            © 2024 BiletOrg. Tüm hakları saklıdır.
           </div>
         </div>
-      </footer>
+      </section>
+
+      <SiteFooter />
     </div>
   )
 }
