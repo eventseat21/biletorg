@@ -15,6 +15,7 @@ import {
   Lightbulb
 } from 'lucide-react'
 import Header from '@/components/header'
+import { SiteFooter } from '@/components/site-footer'
 
 export default function SupportPage() {
   const [formData, setFormData] = useState({
@@ -103,18 +104,33 @@ export default function SupportPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-{/* Navigation */}
-       <Header />
-
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Destek Al</h1>
-          <p className="text-gray-600">
-            Bir sorunuz mu var veya sorun mu yaşıyorsunuz? Size yardımcı olmak için buradayız.
+      <Header />
+      <section className="relative text-white">
+        <div className="absolute inset-0 overflow-hidden">
+          <img
+            src="/destek-hero.png"
+            alt=""
+            className="absolute -top-[80px] left-0 h-[calc(100%+80px)] w-full object-cover object-top"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/30 to-purple-900/20" />
+        </div>
+        <div className="container relative mx-auto max-w-4xl px-4 py-24 text-center md:px-4 md:py-32">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm">
+            <MessageSquare className="h-4 w-4" />
+            BiletOrg destek
+          </div>
+          <h1 className="mb-6 text-4xl font-bold leading-tight text-white md:text-6xl">
+            Destek Al
+          </h1>
+          <p className="mx-auto max-w-2xl text-xl leading-relaxed text-primary-100 md:text-2xl">
+            Bir sorunuz veya sorununuz mu var? Yöneticiler ve ekip hesapları için
+            destek talebi oluşturun; en kısa sürede dönüş yapalım.
           </p>
         </div>
+      </section>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+      <div className="mx-auto max-w-3xl px-4 py-8 pb-12 sm:px-6 lg:px-8">
+        <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Support Type Selection */}
             <div>
@@ -301,20 +317,21 @@ export default function SupportPage() {
             </div>
           </Link>
 
-          <Link 
-            href="/user/dashboard"
+          <Link
+            href="/login"
             className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-200 hover:border-indigo-300 hover:shadow-sm transition-all"
           >
             <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
               <FileQuestion className="w-5 h-5 text-indigo-600" />
             </div>
             <div>
-              <h3 className="font-medium text-gray-900">Biletlerim</h3>
-              <p className="text-sm text-gray-500">Bilet işlemleriniz</p>
+              <h3 className="font-medium text-gray-900">Giriş</h3>
+              <p className="text-sm text-gray-500">Hesabınız varsa panel</p>
             </div>
           </Link>
         </div>
       </div>
+      <SiteFooter />
     </div>
   )
 }
