@@ -94,25 +94,34 @@ export default function PricingPage() {
     <div className="min-h-screen bg-white">
 <Header />
 
-      {/* Hero Section with Eventim Calculator */}
-      <section className="pt-32 pb-20 bg-gradient-to-b from-primary-50/50 to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-100 text-primary-700 rounded-full text-sm font-medium mb-6">
-              <Sparkles className="w-4 h-4" />
-              Şeffaf Fiyatlandırma
-            </div>
-            <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6">
-              Komisyon Başına Ödeyin
-            </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-              Aylık ücret yok, gizli maliyet yok. Sadece sattığınız bilet başına 
-              komisyon ödersiniz. Gerisi tamamen sizin.
-            </p>
+      {/* Hero — fiyat görseli (ana sayfa / SSS ile aynı desen) */}
+      <section className="relative text-white">
+        <div className="absolute inset-0">
+          <img
+            src="/fiyat.jpeg"
+            alt="Fiyatlandırma"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/70 to-purple-900/50" />
+        </div>
+        <div className="container mx-auto px-4 pt-28 pb-14 md:pt-36 md:pb-20 relative text-center max-w-4xl">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-medium mb-6">
+            <Sparkles className="w-4 h-4" />
+            Şeffaf Fiyatlandırma
           </div>
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight text-white">
+            Komisyon Başına Ödeyin
+          </h1>
+          <p className="text-xl md:text-2xl text-primary-100 max-w-2xl mx-auto leading-relaxed">
+            Aylık ücret yok, gizli maliyet yok. Sadece sattığınız bilet başına
+            komisyon ödersiniz. Gerisi tamamen sizin.
+          </p>
+        </div>
+      </section>
 
-          {/* Interactive Price Calculator - Eventim Style */}
-          <div className="max-w-7xl mx-auto">
+      {/* Hesaplayıcı — hero altında beyaz zemin */}
+      <section className="bg-white pb-20 pt-10 md:pt-14">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Input Section */}
             <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-gray-100">
               <div className="flex items-center justify-center gap-2 mb-6">
@@ -280,7 +289,6 @@ export default function PricingPage() {
                 </div>
               </div>
             </div>
-          </div>
         </div>
       </section>
 
@@ -438,27 +446,35 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-primary-600 to-primary-700 text-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl lg:text-4xl font-bold mb-6">
+      {/* CTA — fiyatlandirma.jpg arka plan (üst hero ile aynı desen) */}
+      <section className="relative text-white">
+        <div className="absolute inset-0 overflow-hidden">
+          <img
+            src="/fiyatlandirma.jpg"
+            alt=""
+            className="w-full h-full object-cover object-top"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/70 to-purple-900/50" />
+        </div>
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-24 text-center">
+          <h2 className="text-3xl lg:text-4xl font-bold mb-6 text-white">
             Ücretsiz Başlayın, Sattıkça Ödeyin
           </h2>
           <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-            Hemen ücretsiz hesap oluşturun, ilk etkinliğinizi kurun ve 
+            Hemen ücretsiz hesap oluşturun, ilk etkinliğinizi kurun ve
             sadece bilet sattığınızda komisyon ödeyin.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Link 
-              href="/organizer/register" 
+            <Link
+              href="/organizer/register"
               className="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary-600 rounded-xl font-semibold hover:bg-gray-100 transition-all shadow-lg"
             >
               Ücretsiz Hesap Oluştur
               <ArrowRight className="w-5 h-5" />
             </Link>
-            <Link 
-              href="/coming-soon" 
-              className="inline-flex items-center gap-2 px-8 py-4 bg-primary-500 text-white border-2 border-primary-400 rounded-xl font-semibold hover:bg-primary-400 transition-all"
+            <Link
+              href="/coming-soon"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white/15 backdrop-blur-sm text-white border-2 border-white/40 rounded-xl font-semibold hover:bg-white/25 transition-all"
             >
               <MessageCircle className="w-5 h-5" />
               Satış Ekibiyle Konuş
