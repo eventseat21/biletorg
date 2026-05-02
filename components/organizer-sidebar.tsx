@@ -19,7 +19,7 @@ const navItems = [
   { href: '/organizer', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/organizer/events', label: 'Etkinlikler', icon: Calendar },
   { href: '/organizer/halls', label: 'Salonlar', icon: MapPin },
-  { href: '/organizer/halls/wizard', label: 'Salon Plani Wizard', icon: Wand2 },
+  { href: '/organizer/halls/new', label: 'Yeni Salon Oluştur', icon: Wand2 },
   { href: '/organizer/accounting', label: 'Muhasebe', icon: BarChart3 },
   { href: '/organizer/settings', label: 'Ayarlar', icon: Settings },
 ]

@@ -28,12 +28,40 @@ export async function PUT(
       return NextResponse.json({ error: 'Hall not found' }, { status: 404 })
     }
 
+    const patch: {
+      x?: number
+      y?: number
+      width?: number
+      height?: number
+      rotation?: number
+      type?: string
+      shape?: string
+      row?: string
+      number?: string
+    } = {}
+    if (data.x !== undefined) patch.x = Math.round(Number(data.x))
+    if (data.y !== undefined) patch.y = Math.round(Number(data.y))
+    if (data.width !== undefined) patch.width = Math.max(8, Math.round(Number(data.width)))
+    if (data.height !== undefined) patch.height = Math.max(8, Math.round(Number(data.height)))
+    if (data.rotation !== undefined) patch.rotation = Math.round(Number(data.rotation))
+    if (data.type !== undefined) patch.type = String(data.type)
+    if (data.shape !== undefined) patch.shape = String(data.shape)
+    if (data.row !== undefined) patch.row = String(data.row)
+    if (data.number !== undefined) patch.number = String(data.number)
+
+    if (Object.keys(patch).length === 0) {
+      const seat = await prisma.seat.findFirst({
+        where: { id: params.seatId, hallId: params.id },
+      })
+      if (!seat) {
+        return NextResponse.json({ error: 'Seat not found' }, { status: 404 })
+      }
+      return NextResponse.json(seat)
+    }
+
     const seat = await prisma.seat.update({
       where: { id: params.seatId },
-      data: {
-        x: data.x,
-        y: data.y,
-      }
+      data: patch,
     })
 
     return NextResponse.json(seat)

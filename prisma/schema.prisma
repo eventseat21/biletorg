@@ -99,6 +99,7 @@ model Hall {
   source        String    @default("manual")
   
   seats         Seat[]
+  seatCategories SeatCategory[]
   events        Event[]
   
   createdAt     DateTime  @default(now())
@@ -133,6 +134,22 @@ model Seat {
 
   @@unique([hallId, row, number])
   @@map("seats")
+}
+
+model SeatCategory {
+  id          String    @id @default(cuid())
+  hallId      String
+  hall        Hall      @relation(fields: [hallId], references: [id], onDelete: Cascade)
+  
+  name        String
+  color       String
+  description String?
+  price       Float?
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("seat_categories")
 }
 
 model Event {

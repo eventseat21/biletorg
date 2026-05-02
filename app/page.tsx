@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Calendar, Ticket, BarChart3, MapPin, ChevronRight, Star, ScanLine, Wallet, FileSpreadsheet } from 'lucide-react'
+import { Calendar, Ticket, BarChart3, MapPin, ChevronRight } from 'lucide-react'
 import Header from '@/components/header'
 import { SiteFooter } from '@/components/site-footer'
 
@@ -33,13 +33,35 @@ export default function HomePage() {
               birleştirir. Kendi bilet mağazanızı dakikalar içinde açıp satışa
               hemen başlayın.
             </p>
-            <div className="flex flex-wrap gap-4">
-              <Link href="/organizer/register" className="btn bg-white text-primary-600 hover:bg-primary-50 px-8 py-3 text-lg font-semibold">
-                Şimdi Kayıt Olun
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="section bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+                Etkinlik biletleme işlemlerinize birkaç dakika içinde başlayın
+              </h2>
+              <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+                Kendi çevrimiçi bilet satış mağazanızda sadece birkaç dakika içinde bilet satmaya başlayın ve bunu web sitenize kolayca entegre edin. Etkinliğin türü ne olursa olsun, organizatör olarak bilet satışlarınıza bugün başlayın.
+              </p>
+              <Link 
+                href="/organizer/register" 
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors"
+              >
+                Hemen Başlayın
+                <ChevronRight className="w-5 h-5" />
               </Link>
-              <Link href="/events" className="btn border-2 border-white text-white hover:bg-white/10 px-8 py-3 text-lg font-semibold">
-                Etkinlikleri Keşfet
-              </Link>
+            </div>
+            <div className="relative">
+              <img 
+                src="/21.png" 
+                alt="Bilet satışı başlatma" 
+                className="rounded-2xl shadow-xl w-full"
+              />
             </div>
           </div>
         </div>
@@ -53,8 +75,7 @@ export default function HomePage() {
               Etkinlik biletleme için ihtiyacınız olan her şey
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Eventim benzeri uçtan uca akış, BiletOrg farkıyla salon tasarımını ve
-              satışı tek panelde kolaylaştırır.
+              Salon tasarımı, bilet kategorileri ve satış yönetimini tek platformda birleştirdik.
             </p>
           </div>
           
@@ -79,83 +100,6 @@ export default function HomePage() {
               title="Akıllı Bilet Yönetimi"
               description="QR kod ile giriş kontrolü, aktarılabilir biletler ve daha fazlası."
             />
-          </div>
-        </div>
-      </section>
-
-      {/* Homepage Module Overview */}
-      <section className="section bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Modüler ürün yapısı: kısa anlatım, detay sayfaları
-            </h2>
-            <p className="text-xl text-gray-600">
-              Ana sayfada kısa özet; her başlık için ayrı detay sayfası
-            </p>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <ModuleCard
-              icon={<MapPin className="w-6 h-6" />}
-              title="Salon Tasarımı (SVG Destekli)"
-              description="Hazır SVG yükleyin, sistem koltuk alanlarını hızlıca satışa uygun hale getirsin."
-              href="/saalplan"
-            />
-            <ModuleCard
-              icon={<Ticket className="w-6 h-6" />}
-              title="Biletleme ve Kategori Yönetimi"
-              description="VIP, Premium, Normal gibi kategorileri oluşturun; fiyat ve stokları tek ekrandan yönetin."
-              href="/ticketshop"
-            />
-            <ModuleCard
-              icon={<ScanLine className="w-6 h-6" />}
-              title="QR ile Giriş Kontrolü"
-              description="Etkinlik günü hızlı ve güvenli kontrol için QR tabanlı giriş sürecini yönetin."
-              href="/benefits"
-            />
-            <ModuleCard
-              icon={<Wallet className="w-6 h-6" />}
-              title="Muhasebe ve Gelir Akışı"
-              description="Satış, komisyon ve aktarım süreçlerini takip ederek operasyonu tek yerden yönetin."
-              href="/pricing"
-            />
-            <ModuleCard
-              icon={<FileSpreadsheet className="w-6 h-6" />}
-              title="Fiyat Hesaplama Mekanizması"
-              description="Şeffaf komisyon modeli ile bilet fiyatı, platform payı ve net kazancı anlık görün."
-              href="/pricing"
-            />
-            <ModuleCard
-              icon={<BarChart3 className="w-6 h-6" />}
-              title="Raporlama ve Performans"
-              description="Etkinlik bazlı satış eğilimlerini izleyin, sonraki kampanyaları veriye göre optimize edin."
-              href="/benefits"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Visual Slots For Future Photos */}
-      <section className="section bg-white">
-        <div className="container mx-auto px-4">
-          <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 md:p-8">
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="min-h-[220px] rounded-xl border border-gray-200 bg-white/80 p-6">
-                <p className="text-sm font-semibold text-gray-700 mb-2">Sol görsel alanı</p>
-                <p className="text-sm text-gray-500">
-                  Buraya "salon tasarımı nasıl yapılır?" bölümünü destekleyen görsel
-                  eklenebilir.
-                </p>
-              </div>
-              <div className="min-h-[220px] rounded-xl border border-gray-200 bg-white/80 p-6">
-                <p className="text-sm font-semibold text-gray-700 mb-2">Sağ görsel alanı</p>
-                <p className="text-sm text-gray-500">
-                  Buraya "satış ve raporlama" gibi modülleri anlatan ikinci görsel
-                  eklenebilir.
-                </p>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -206,32 +150,6 @@ function FeatureCard({ icon, title, description }: { icon: React.ReactNode, titl
       </div>
       <h3 className="text-xl font-semibold text-gray-900 mb-2">{title}</h3>
       <p className="text-gray-600">{description}</p>
-    </div>
-  )
-}
-
-function ModuleCard({
-  icon,
-  title,
-  description,
-  href
-}: {
-  icon: React.ReactNode
-  title: string
-  description: string
-  href: string
-}) {
-  return (
-    <div className="card p-6 hover:shadow-md transition-shadow">
-      <div className="w-12 h-12 bg-primary-50 rounded-xl flex items-center justify-center text-primary-700 mb-4">
-        {icon}
-      </div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-      <p className="text-gray-600 text-sm leading-relaxed mb-4">{description}</p>
-      <Link href={href} className="inline-flex items-center gap-2 text-sm font-medium text-primary-700 hover:text-primary-800">
-        Detayı aç
-        <ChevronRight className="w-4 h-4" />
-      </Link>
     </div>
   )
 }

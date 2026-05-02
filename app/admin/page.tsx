@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import { MapPin, Users, ChevronRight } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,8 +42,33 @@ async function getAdminStats() {
   }
 }
 
+async function getAllHalls() {
+  try {
+    return prisma.hall.findMany({
+      include: {
+        organizer: {
+          select: {
+            id: true,
+            companyName: true,
+            organizationDisplayName: true,
+            companyEmail: true
+          }
+        },
+        _count: {
+          select: { seats: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+  } catch (error) {
+    console.error('Error fetching halls:', error)
+    return []
+  }
+}
+
 export default async function AdminDashboard() {
   const stats = await getAdminStats()
+  const halls = await getAllHalls()
 
   return (
     <div>
@@ -80,6 +106,63 @@ export default async function AdminDashboard() {
             </Link>
           )}
         </div>
+      </div>
+
+      {/* Halls Section */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">Salonlar</h2>
+          <p className="text-sm text-gray-500">Toplam {halls.length} salon</p>
+        </div>
+
+        {halls.length === 0 ? (
+          <div className="card p-12 text-center">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <MapPin className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Henüz salon yok</h3>
+            <p className="text-gray-500">Organizatörler salon oluşturduğunda burada görünecek</p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {halls.map((hall) => (
+              <div key={hall.id} className="card hover:shadow-md transition-shadow">
+                <div className="h-32 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+                  <MapPin className="w-12 h-12 text-primary-600" />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{hall.name}</h3>
+                  <p className="text-sm text-gray-500 mb-4 line-clamp-2">{hall.description || 'Açıklama yok'}</p>
+                  
+                  <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+                    <span className="flex items-center gap-1">
+                      <Users size={16} />
+                      {hall._count.seats} koltuk
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <MapPin size={16} />
+                      {hall.capacity} kapasite
+                    </span>
+                  </div>
+
+                  <div className="text-sm text-gray-500 mb-4">
+                    <p className="font-medium text-gray-700">Organizatör:</p>
+                    <p>{hall.organizer.organizationDisplayName || hall.organizer.companyName}</p>
+                    <p className="text-xs">{hall.organizer.companyEmail}</p>
+                  </div>
+
+                  <Link 
+                    href={`/organizer/halls/${hall.id}`}
+                    className="text-primary-600 hover:text-primary-700 font-medium text-sm inline-flex items-center gap-1"
+                  >
+                    Detayları gör
+                    <ChevronRight size={16} />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

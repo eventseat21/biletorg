@@ -32,6 +32,7 @@ import { SiteFooter } from '@/components/site-footer'
 export default function PricingPage() {
   const [ticketPrice, setTicketPrice] = useState<number>(10)
   const [showTooltip, setShowTooltip] = useState(false)
+  const [includeFees, setIncludeFees] = useState(false)
 
   // Eventim Light commission formula
   const calculateCommission = (price: number): number => {
@@ -62,20 +63,32 @@ export default function PricingPage() {
   }
 
   const commission = calculateCommission(ticketPrice)
-  const organizerEarnings = ticketPrice
+  
+  // Inklusive Gebühren logic
+  let basePrice = ticketPrice
+  let organizerEarnings = ticketPrice
+  
+  if (includeFees) {
+    // When "Inklusive Gebühren" is checked, ticketPrice is the customer's total
+    // We need to calculate what the organizer earns after commission
+    organizerEarnings = ticketPrice - commission
+  } else {
+    // When unchecked, ticketPrice is the organizer's base price
+    organizerEarnings = ticketPrice
+  }
 
   // Channel 1: Customer's own ticket sales point (iframe)
   const channel1Commission = commission
-  const channel1CustomerTotal = ticketPrice + channel1Commission
+  const channel1CustomerTotal = includeFees ? ticketPrice : ticketPrice + channel1Commission
 
   // Channel 2: Box office - same tiered commission as channel 1
   const channel2Commission = commission
-  const channel2CustomerTotal = ticketPrice + channel2Commission
+  const channel2CustomerTotal = includeFees ? ticketPrice : ticketPrice + channel2Commission
 
   // Channel 3: Eventim Shop - commission + 10% reservation fee
-  const reservationFee = ticketPrice * 0.10
+  const reservationFee = basePrice * 0.10
   const channel3Commission = commission + reservationFee
-  const channel3CustomerTotal = ticketPrice + channel3Commission
+  const channel3CustomerTotal = includeFees ? ticketPrice : ticketPrice + channel3Commission
 
   return (
     <div className="min-h-screen bg-white">
@@ -128,14 +141,40 @@ export default function PricingPage() {
                   Bilet Fiyatı (€)
                 </label>
                 <div className="flex items-center justify-center gap-4">
+                  <button
+                    onClick={() => setTicketPrice(Math.max(1, ticketPrice - 1))}
+                    className="w-12 h-12 flex items-center justify-center bg-primary-100 text-primary-600 rounded-xl hover:bg-primary-200 transition-colors text-2xl font-bold"
+                  >
+                    -
+                  </button>
                   <input
                     type="number"
                     min="1"
                     max="1000"
-                    value={ticketPrice}
+                    step="0.01"
+                    value={ticketPrice.toFixed(2)}
                     onChange={(e) => setTicketPrice(Math.max(1, parseFloat(e.target.value) || 0))}
                     className="w-32 px-4 py-3 text-center text-2xl font-bold border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none"
                   />
+                  <button
+                    onClick={() => setTicketPrice(Math.min(1000, ticketPrice + 1))}
+                    className="w-12 h-12 flex items-center justify-center bg-primary-100 text-primary-600 rounded-xl hover:bg-primary-200 transition-colors text-2xl font-bold"
+                  >
+                    +
+                  </button>
+                </div>
+                
+                {/* Inklusive Gebühren Toggle */}
+                <div className="flex items-center justify-center gap-3 mt-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={includeFees}
+                      onChange={(e) => setIncludeFees(e.target.checked)}
+                      className="w-5 h-5 text-primary-600 rounded focus:ring-primary-500"
+                    />
+                    <span className="text-sm text-gray-700">Inklusive Gebühren</span>
+                  </label>
                 </div>
               </div>
             </div>
@@ -245,146 +284,6 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Pricing Tiers */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Tüm Özellikler Dahil
-            </h2>
-            <p className="text-xl text-gray-600">
-              Her etkinlik için aynı düşük komisyon, tüm özellikler açık
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Starter */}
-            <div className="bg-white rounded-2xl p-8 border border-gray-200 hover:border-primary-200 hover:shadow-lg transition-all">
-              <div className="text-center mb-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Başlangıç</h3>
-                <p className="text-gray-500 text-sm">Küçük etkinlikler için</p>
-              </div>
-              <div className="text-center mb-6">
-                <span className="text-5xl font-bold text-gray-900">%5</span>
-                <span className="text-gray-500">/bilet</span>
-              </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span>500'e kadar katılımcı</span>
-                </li>
-                <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span>Temel bilet mağazası</span>
-                </li>
-                <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span>E-posta desteği</span>
-                </li>
-                <li className="flex items-center gap-3 text-sm text-gray-400">
-                  <X className="w-5 h-5 flex-shrink-0" />
-                  <span>Koltuk seçimi</span>
-                </li>
-                <li className="flex items-center gap-3 text-sm text-gray-400">
-                  <X className="w-5 h-5 flex-shrink-0" />
-                  <span>Özel domain</span>
-                </li>
-              </ul>
-              <Link 
-                href="/organizer/register" 
-                className="block w-full py-3 px-4 bg-gray-100 text-gray-700 rounded-xl font-semibold text-center hover:bg-gray-200 transition-colors"
-              >
-                Ücretsiz Başla
-              </Link>
-            </div>
-
-            {/* Pro - Featured */}
-            <div className="bg-gradient-to-b from-primary-600 to-primary-700 rounded-2xl p-8 text-white relative transform scale-105 shadow-2xl">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-yellow-400 text-yellow-900 px-4 py-1 rounded-full text-sm font-semibold">
-                  En Popüler
-                </span>
-              </div>
-              <div className="text-center mb-6 pt-4">
-                <h3 className="text-xl font-semibold mb-2">Profesyonel</h3>
-                <p className="text-primary-100 text-sm">Profesyonel organizatörler için</p>
-              </div>
-              <div className="text-center mb-6">
-                <span className="text-5xl font-bold">%5</span>
-                <span className="text-primary-200">/bilet</span>
-              </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3 text-sm text-primary-100">
-                  <Check className="w-5 h-5 text-yellow-400 flex-shrink-0" />
-                  <span>Sınırsız katılımcı</span>
-                </li>
-                <li className="flex items-center gap-3 text-sm text-primary-100">
-                  <Check className="w-5 h-5 text-yellow-400 flex-shrink-0" />
-                  <span>Markalı bilet mağazası</span>
-                </li>
-                <li className="flex items-center gap-3 text-sm text-primary-100">
-                  <Check className="w-5 h-5 text-yellow-400 flex-shrink-0" />
-                  <span>Görsel koltuk seçimi</span>
-                </li>
-                <li className="flex items-center gap-3 text-sm text-primary-100">
-                  <Check className="w-5 h-5 text-yellow-400 flex-shrink-0" />
-                  <span>Özel domain desteği</span>
-                </li>
-                <li className="flex items-center gap-3 text-sm text-primary-100">
-                  <Check className="w-5 h-5 text-yellow-400 flex-shrink-0" />
-                  <span>Öncelikli destek</span>
-                </li>
-              </ul>
-              <Link 
-                href="/organizer/register" 
-                className="block w-full py-3 px-4 bg-white text-primary-600 rounded-xl font-semibold text-center hover:bg-gray-100 transition-colors"
-              >
-                Hemen Başla
-              </Link>
-            </div>
-
-            {/* Enterprise */}
-            <div className="bg-white rounded-2xl p-8 border border-gray-200 hover:border-primary-200 hover:shadow-lg transition-all">
-              <div className="text-center mb-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Kurumsal</h3>
-                <p className="text-gray-500 text-sm">Büyük organizasyonlar için</p>
-              </div>
-              <div className="text-center mb-6">
-                <span className="text-5xl font-bold text-gray-900">Özel</span>
-              </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span>Profesyonel paketteki her şey</span>
-                </li>
-                <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span>Özel komisyon oranı</span>
-                </li>
-                <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span>API erişimi</span>
-                </li>
-                <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span>Özel entegrasyonlar</span>
-                </li>
-                <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span>7/24 telefon desteği</span>
-                </li>
-              </ul>
-              <Link 
-                href="/coming-soon" 
-                className="block w-full py-3 px-4 bg-gray-100 text-gray-700 rounded-xl font-semibold text-center hover:bg-gray-200 transition-colors"
-              >
-                İletişime Geç
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Features Included */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -393,7 +292,7 @@ export default function PricingPage() {
               Tüm Paketlerde Dahil
             </h2>
             <p className="text-xl text-gray-600">
-              %5 komisyon ile aldığınız her şey
+              %3.5 komisyon ile aldığınız her şey
             </p>
           </div>
 
@@ -510,7 +409,7 @@ export default function PricingPage() {
                 Aylık ücret var mı?
               </h4>
               <p className="text-gray-600">
-                Hayır, BiletOrg'da aylık ücret yoktur. Sadece sattığınız bilet başına %5 komisyon ödersiniz. 
+                Hayır, BiletOrg'da aylık ücret yoktur. Sadece sattığınız bilet başına komisyon ödersiniz. 
                 Etkinlik oluşturmak, salon planı hazırlamak tamamen ücretsizdir.
               </p>
             </div>
@@ -521,8 +420,7 @@ export default function PricingPage() {
                 Ödemeler ne zaman hesabıma geçer?
               </h4>
               <p className="text-gray-600">
-                Bilet satışlarından elde ettiğiniz gelir, etkinlik tarihinden 2 iş günü sonra 
-                otomatik olarak banka hesabınıza transfer edilir.
+                İlk etkinlikte etkinlik tamamlandıktan sonra 7. günde, sonraki etkinliklerde ise 2-3 gün sonra ödeme banka hesabınıza transfer edilir.
               </p>
             </div>
 
@@ -532,32 +430,10 @@ export default function PricingPage() {
                 Ücretsiz iptal edilen biletlerden komisyon alınır mı?
               </h4>
               <p className="text-gray-600">
-                İptal edilen biletlerden komisyon alınmaz. Müşteriye tam iade yapılır, 
-                sizden de kesinti olmaz.
+                Partial Refund ücreti kesilir. Bilet için alınan komisyon iade edilmez.
               </p>
             </div>
 
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                <HelpCircle className="w-5 h-5 text-primary-500" />
-                Kurumsal paket için minimum satış şartı var mı?
-              </h4>
-              <p className="text-gray-600">
-                Evet, Kurumsal paket için yıllık minimum 10.000 bilet satışı şartı vardır. 
-                Detaylar için satış ekibimizle iletişime geçin.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                <HelpCircle className="w-5 h-5 text-primary-500" />
-                Paketimi sonradan yükseltebilir miyim?
-              </h4>
-              <p className="text-gray-600">
-                Evet, istediğiniz zaman paketinizi yükseltebilir veya düşürebilirsiniz. 
-                Değişiklikler bir sonraki etkinliğinizden itibaren geçerli olur.
-              </p>
-            </div>
           </div>
         </div>
       </section>

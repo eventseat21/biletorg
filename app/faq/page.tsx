@@ -91,11 +91,11 @@ const faqs = [
       },
       {
         q: 'Ödemeler ne zaman hesabıma geçer?',
-        a: 'Bilet satışlarından elde ettiğiniz gelir, etkinlik tarihinden 2 iş günü sonra otomatik olarak banka hesabınıza transfer edilir.'
+        a: 'İlk etkinlikte etkinlik tamamlandıktan sonra 7. günde, sonraki etkinliklerde ise 2-3 gün sonra ödeme banka hesabınıza transfer edilir.'
       },
       {
         q: 'İptal edilen biletlerden komisyon alınır mı?',
-        a: 'Hayır. İptal edilen biletlerden komisyon alınmaz. Müşteriye tam iade yapılır, sizden de kesinti olmaz.'
+        a: 'Partial Refund ücreti kesilir. Bilet için alınan komisyon iade edilmez.'
       }
     ]
   },

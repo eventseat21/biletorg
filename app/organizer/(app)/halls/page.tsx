@@ -2,7 +2,8 @@ import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import Link from 'next/link'
-import { Plus, MapPin, Users, ArrowRight, Wand2 } from 'lucide-react'
+import { Plus, MapPin, Users, ArrowRight, Wand2, Trash2 } from 'lucide-react'
+import { DeleteHallButton } from './delete-hall-button'
 
 async function getHalls(organizerId: string) {
   return prisma.hall.findMany({
@@ -76,13 +77,20 @@ export default async function HallsPage() {
                   </span>
                 </div>
 
-                <Link 
-                  href={`/organizer/halls/${hall.id}`}
-                  className="text-primary-600 hover:text-primary-700 font-medium text-sm inline-flex items-center gap-1"
-                >
-                  Düzenle
-                  <ArrowRight size={16} />
-                </Link>
+                <div className="flex items-center justify-between gap-2">
+                  <Link 
+                    href={`/organizer/halls/${hall.id}`}
+                    className="text-primary-600 hover:text-primary-700 font-medium text-sm inline-flex items-center gap-1"
+                  >
+                    Düzenle
+                    <ArrowRight size={16} />
+                  </Link>
+                  
+                  <DeleteHallButton 
+                    hallId={hall.id} 
+                    hallName={hall.name} 
+                  />
+                </div>
               </div>
             </div>
           ))}
