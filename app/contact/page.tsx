@@ -28,11 +28,28 @@ export default function ContactPage() {
     e.preventDefault()
     setIsSubmitting(true)
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    setIsSubmitting(false)
-    setIsSubmitted(true)
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const result = await response.json()
+      
+      if (response.ok) {
+        setIsSubmitted(true)
+      } else {
+        alert('Mesaj gönderilirken bir hata oluştu: ' + result.error)
+      }
+    } catch (error) {
+      console.error('Contact form error:', error)
+      alert('Mesaj gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -107,7 +124,9 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900">E-posta</h3>
-                  <p className="text-gray-600">destek@biletorg.com</p>
+                  <p className="text-gray-600">hallo@kurdevents.org</p>
+                  <p className="text-gray-600">eventseat21@gmail.com</p>
+                  <p className="text-gray-600">whitedesoul@gmail.com</p>
                   <p className="text-sm text-gray-500">7/24 e-posta desteği</p>
                 </div>
               </div>
@@ -118,7 +137,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900">Telefon</h3>
-                  <p className="text-gray-600">+90 850 123 45 67</p>
+                  <p className="text-gray-600">+49 1724 395 385</p>
                   <p className="text-sm text-gray-500">Hafta içi 09:00 - 18:00</p>
                 </div>
               </div>
@@ -129,8 +148,9 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900">Adres</h3>
-                  <p className="text-gray-600">Levent Mah. Çamlıca Sok. No:5</p>
-                  <p className="text-gray-600">34330 Beşiktaş/İstanbul</p>
+                  <p className="text-gray-600">Schulstraße 35</p>
+                  <p className="text-gray-600">31708 Ahnsen</p>
+                  <p className="text-gray-600">Deutschland</p>
                 </div>
               </div>
             </div>

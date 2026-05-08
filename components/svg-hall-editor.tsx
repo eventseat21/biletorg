@@ -700,6 +700,7 @@ export default function SvgHallEditor({ hallId }: SvgHallEditorProps) {
   const [showCategoryOnSeats, setShowCategoryOnSeats] = useState(true)
   const [referenceSeatSize, setReferenceSeatSize] = useState(28)
   const [showLayoutGuides, setShowLayoutGuides] = useState(true)
+  const [rowGroupDistance, setRowGroupDistance] = useState(50) // Sıra Grup Mesafesi (Y Eşiği)
   const [selectedLayoutBlockId, setSelectedLayoutBlockId] = useState<string | null>(null)
   const layoutScaleHistoryPushed = useRef(false)
   const layoutCenterDragHistoryPushed = useRef(false)
@@ -800,26 +801,76 @@ export default function SvgHallEditor({ hallId }: SvgHallEditorProps) {
     })
   }, [])
 
-  const fetchHallData = async () => {
+  const organizeSeats = (seats: Seat[], rowGroupDistance: number): Seat[] => {
+  if (!seats.length) return seats
+
+  // 1. Koltukları satırlara göre grupla (Y eşiğine göre)
+  const seatsByRow = seats.reduce((acc, seat) => {
+    const rowKey = seat.row
+    if (!acc[rowKey]) acc[rowKey] = []
+    acc[rowKey].push(seat)
+    return acc
+  }, {} as Record<string, Seat[]>)
+
+  // 2. Her satırı düzelt
+  const organizedSeats: Seat[] = []
+  let currentY = 100 // Başlangıç Y pozisyonu
+
+  Object.keys(seatsByRow).sort((a, b) => {
+    const aNum = parseInt(a.replace(/\D/g, '')) || 0
+    const bNum = parseInt(b.replace(/\D/g, '')) || 0
+    return aNum - bNum
+  }).forEach((rowKey, rowIndex) => {
+    const rowSeats = seatsByRow[rowKey]
+    
+    // 3. Koltukları X pozisyonuna göre sırala
+    rowSeats.sort((a, b) => a.x - b.x)
+    
+    // 4. Koltukları düzgün yerleştir
+    const startX = 100 // Başlangıç X pozisyonu
+    const seatSpacing = 35 // Koltuklar arası mesafe
+    const rowSpacing = rowGroupDistance // Sıralar arası mesafe (ayarlanabilir)
+    
+    rowSeats.forEach((seat, seatIndex) => {
+      organizedSeats.push({
+        ...seat,
+        x: Math.round(startX + seatIndex * seatSpacing),
+        y: Math.round(currentY),
+        row: rowKey,
+        // Koltuk numarasını düzelt
+        number: String(seatIndex + 1)
+      })
+    })
+    
+    currentY += rowSpacing
+  })
+
+  return organizedSeats
+}
+
+const fetchHallData = async () => {
     try {
       const res = await fetch(`/api/organizer/halls/${hallId}`)
       const data = await res.json()
       const rawSeats = (data.seats || []) as Record<string, unknown>[]
       const updatedSeats = rawSeats.map(normalizeApiSeat)
+      
+      // Koltukları organize et - sıra grup mesafesi ile
+      const organizedSeats = organizeSeats(updatedSeats, rowGroupDistance)
 
       const maxX =
-        updatedSeats.length > 0
-          ? Math.max(...updatedSeats.map((s) => s.x + s.width)) + 120
+        organizedSeats.length > 0
+          ? Math.max(...organizedSeats.map((s) => s.x + s.width)) + 120
           : 0
       const maxY =
-        updatedSeats.length > 0
-          ? Math.max(...updatedSeats.map((s) => s.y + s.height)) + 120
+        organizedSeats.length > 0
+          ? Math.max(...organizedSeats.map((s) => s.y + s.height)) + 120
           : 0
       const newStageWidth = Math.max(Number(data.stageWidth) || 800, maxX, 400)
       const newStageHeight = Math.max(Number(data.stageHeight) || 600, maxY, 400)
 
       setHall({ ...data, stageWidth: newStageWidth, stageHeight: newStageHeight })
-      setSeats(updatedSeats)
+      setSeats(organizedSeats)
       setPast([])
       setFuture([])
       setPendingDeleteIds([])
@@ -832,7 +883,7 @@ export default function SvgHallEditor({ hallId }: SvgHallEditorProps) {
 
   useEffect(() => {
     fetchHallData()
-  }, [hallId])
+  }, [hallId, rowGroupDistance])
 
   const svgSource = hall?.svgSource as string | undefined
 
@@ -3111,6 +3162,30 @@ export default function SvgHallEditor({ hallId }: SvgHallEditorProps) {
             />
             Sahnedeki blok kılavuzlarını göster (sürükle/döndür)
           </label>
+          <div className="space-y-1">
+            <label className="flex items-center gap-2 text-[11px] text-gray-700">
+              <span className="font-medium">Sıra Grup Mesafesi (Y Eşiği):</span>
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="20"
+                max="100"
+                step="5"
+                value={rowGroupDistance}
+                onChange={(e) => {
+                  const newValue = Number(e.target.value)
+                  console.log('Sıra Grup Mesafesi değişti:', newValue)
+                  setRowGroupDistance(newValue)
+                }}
+                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              />
+              <span className="min-w-[40px] text-[10px] font-medium text-gray-700 bg-gray-100 px-1 py-0.5 rounded">
+                {rowGroupDistance}px
+              </span>
+            </div>
+            <p className="text-[10px] text-gray-500">Sıralar arası dikey mesafe (20-100px)</p>
+          </div>
           <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
             {layoutBlocks.map((block) => (
               <div key={block.id} className="rounded-lg border border-emerald-200 bg-white p-2">

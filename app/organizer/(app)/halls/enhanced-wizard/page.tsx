@@ -92,6 +92,7 @@ export default function EnhancedHallWizardPage() {
   const [parsed, setParsed] = useState<ParsedSummary | null>(null)
   const [createdHallId, setCreatedHallId] = useState<string | null>(null)
   const [seats, setSeats] = useState<Seat[]>([])
+  const [rowGroupDistance, setRowGroupDistance] = useState(50) // Sıra Grup Mesafesi (Y Eşiği)
   const [categories, setCategories] = useState<Category[]>([
     { type: 'VIP', ratio: 0.2, price: 750 },
     { type: 'PREMIUM', ratio: 0.3, price: 550 },
@@ -124,6 +125,7 @@ export default function EnhancedHallWizardPage() {
     try {
       const fd = new FormData()
       fd.append('svg', svgFile)
+      fd.append('rowGroupDistance', String(rowGroupDistance))
       const res = await fetch('/api/organizer/halls/enhanced-parse', {
         method: 'POST',
         body: fd,
@@ -229,6 +231,26 @@ export default function EnhancedHallWizardPage() {
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                 rows={2}
               />
+            </div>
+            <div className="mb-4">
+              <label className="mb-1 block text-sm font-medium text-gray-700">Sıra Grup Mesafesi (Y Eşiği)</label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="range"
+                  min="20"
+                  max="100"
+                  step="5"
+                  value={rowGroupDistance}
+                  onChange={(e) => {
+                    const newValue = Number(e.target.value)
+                    console.log('Sıra Grup Mesafesi değişti:', newValue)
+                    setRowGroupDistance(newValue)
+                  }}
+                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                />
+                <span className="min-w-[50px] text-sm font-medium text-gray-700 bg-gray-100 px-2 py-1 rounded">{rowGroupDistance}px</span>
+              </div>
+              <p className="mt-1 text-xs text-gray-500">Aynı satırdaki koltukları gruplamak için Y eksenindeki mesafe eşiği (20-100px)</p>
             </div>
             <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center">
               <Upload className="mx-auto mb-3 h-8 w-8 text-indigo-500" />

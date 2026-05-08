@@ -12,15 +12,29 @@ import {
   FileQuestion,
   AlertCircle,
   Bug,
-  Lightbulb
+  Lightbulb,
+  Mail
 } from 'lucide-react'
 import Header from '@/components/header'
 import { SiteFooter } from '@/components/site-footer'
 
+interface SupportFormData {
+  type: string
+  priority: string
+  name: string
+  email: string
+  subject: string
+  message: string
+  ticketId: string
+  orderId: string
+}
+
 export default function SupportPage() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<SupportFormData>({
     type: 'question',
     priority: 'normal',
+    name: '',
+    email: '',
     subject: '',
     message: '',
     ticketId: '',
@@ -34,20 +48,36 @@ export default function SupportPage() {
     e.preventDefault()
     setIsSubmitting(true)
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // Generate random ticket number
-    setTicketNumber(`TKT-${Date.now().toString(36).toUpperCase().slice(-6)}`)
-    
-    setIsSubmitting(false)
-    setIsSubmitted(true)
+    try {
+      const response = await fetch('/api/support', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const result = await response.json()
+      
+      if (response.ok) {
+        setTicketNumber(result.ticketNumber)
+        setIsSubmitted(true)
+      } else {
+        alert('Destek talebi oluşturulurken bir hata oluştu: ' + result.error)
+      }
+    } catch (error) {
+      console.error('Support form error:', error)
+      alert('Destek talebi oluşturulurken bir hata oluştu. Lütfen daha sonra tekrar deneyin.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: value
     }))
   }
 
@@ -210,6 +240,44 @@ export default function SupportPage() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
                 placeholder="Talebinizin kısa özeti"
               />
+            </div>
+
+            {/* Contact Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ad Soyad *
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                    placeholder="Adınız Soyadınız"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  E-posta *
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                    placeholder="ornek@email.com"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Optional Fields */}

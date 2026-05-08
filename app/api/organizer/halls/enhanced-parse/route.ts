@@ -19,6 +19,9 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData()
     const svgFile = formData.get('svg') as File
+    const rowGroupDistance = Number(formData.get('rowGroupDistance')) || 50
+
+    console.log('API - Sıra Grup Mesafesi alındı:', rowGroupDistance)
 
     if (!svgFile) {
       return NextResponse.json({ error: 'SVG file required' }, { status: 400 })
@@ -38,7 +41,9 @@ export async function POST(request: Request) {
 
     const rawCandidates = extractSeatsWithTransforms(document)
     const sized = enforceMinSeatFootprint(rawCandidates, 16)
-    const aligned = alignSeatRowsVertically(sized)
+    const toleranceFactor = rowGroupDistance / 100
+    console.log('API - rowToleranceFactor:', toleranceFactor)
+    const aligned = alignSeatRowsVertically(sized, { rowToleranceFactor: toleranceFactor })
     const separated = separateOverlappingCandidates(aligned)
 
     let counter = 1
