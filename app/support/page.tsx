@@ -118,7 +118,9 @@ export default function SupportPage() {
                   subject: '', 
                   message: '', 
                   ticketId: '', 
-                  orderId: '' 
+                  orderId: '', 
+                  name: '', 
+                  email: '' 
                 })
                 setTicketNumber('')
               }}
