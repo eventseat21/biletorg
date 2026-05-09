@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 
+const FORM_RECIPIENT_EMAIL = 'eventseat21@gmail.com'
+
 export async function POST(request: NextRequest) {
   try {
     const { name, email, phone, subject, message } = await request.json()
@@ -30,32 +32,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if we're in development (localhost)
-    const isDevelopment = process.env.NODE_ENV === 'development' || 
-                         process.env.NEXTAUTH_URL?.includes('localhost')
-
-    if (isDevelopment) {
-      // Test mode for development
-      console.log('=== DEVELOPMENT MODE - Contact form submission ===')
-      console.log('From:', name, email)
-      console.log('Subject:', subject)
-      console.log('Message:', message)
-      console.log('Phone:', phone)
-      console.log('=== END DEVELOPMENT MODE ===')
-
-      return NextResponse.json(
-        { success: true, message: 'Mesajınız başarıyla gönderildi! (Development Mode)' },
-        { status: 200 }
-      )
-    }
-
-    // Production mode - send real email
-    console.log('PRODUCTION MODE - Attempting to send email...')
+    console.log('Attempting to send contact form email...')
     console.log('SMTP Settings:', {
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS ? '***SET***' : 'NOT_SET',
+      recipient: FORM_RECIPIENT_EMAIL,
       nodeEnv: process.env.NODE_ENV,
       nextAuthUrl: process.env.NEXTAUTH_URL
     })
@@ -65,8 +48,8 @@ export async function POST(request: NextRequest) {
       port: parseInt(process.env.SMTP_PORT || '587'),
       secure: false,
       auth: {
-        user: process.env.SMTP_USER || 'eventseat21@gmail.com',
-        pass: process.env.SMTP_PASS || 'your-app-password'
+        user: process.env.SMTP_USER || FORM_RECIPIENT_EMAIL,
+        pass: process.env.SMTP_PASS?.replace(/\s/g, '') || 'your-app-password'
       }
     })
 
@@ -100,8 +83,8 @@ export async function POST(request: NextRequest) {
 
     // Send email
     await transporter.sendMail({
-      from: process.env.SMTP_USER || 'eventseat21@gmail.com',
-      to: 'eventseat21@gmail.com',
+      from: process.env.SMTP_USER || FORM_RECIPIENT_EMAIL,
+      to: FORM_RECIPIENT_EMAIL,
       subject: `İletişim Formu: ${subject}`,
       html: emailContent,
       replyTo: email

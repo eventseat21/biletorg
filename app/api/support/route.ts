@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 
+const FORM_RECIPIENT_EMAIL = 'eventseat21@gmail.com'
+
 export async function POST(request: NextRequest) {
   try {
     const { type, priority, subject, message, ticketId, orderId, name, email } = await request.json()
@@ -30,41 +32,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if we're in development (localhost)
-    const isDevelopment = process.env.NODE_ENV === 'development' || 
-                         process.env.NEXTAUTH_URL?.includes('localhost')
-
-    if (isDevelopment) {
-      // Test mode for development
-      console.log('=== DEVELOPMENT MODE - Support form submission ===')
-      console.log('Type:', type)
-      console.log('Priority:', priority)
-      console.log('From:', name, email)
-      console.log('Subject:', subject)
-      console.log('Message:', message)
-      console.log('Ticket ID:', ticketId)
-      console.log('Order ID:', orderId)
-      console.log('=== END DEVELOPMENT MODE ===')
-
-      const ticketNumber = `TKT-${Date.now().toString(36).toUpperCase().slice(-6)}`
-      return NextResponse.json(
-        { 
-          success: true, 
-          message: 'Destek talebiniz başarıyla oluşturuldu! (Development Mode)',
-          ticketNumber: ticketNumber
-        },
-        { status: 200 }
-      )
-    }
-
-    // Production mode - send real email
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: parseInt(process.env.SMTP_PORT || '587'),
       secure: false,
       auth: {
-        user: process.env.SMTP_USER || 'eventseat21@gmail.com',
-        pass: process.env.SMTP_PASS || 'your-app-password'
+        user: process.env.SMTP_USER || FORM_RECIPIENT_EMAIL,
+        pass: process.env.SMTP_PASS?.replace(/\s/g, '') || 'your-app-password'
       }
     })
 
@@ -105,8 +79,8 @@ export async function POST(request: NextRequest) {
 
     // Send email
     await transporter.sendMail({
-      from: process.env.SMTP_USER || 'eventseat21@gmail.com',
-      to: 'eventseat21@gmail.com',
+      from: process.env.SMTP_USER || FORM_RECIPIENT_EMAIL,
+      to: FORM_RECIPIENT_EMAIL,
       subject: `Destek Talebi: ${subject} (${ticketNumber})`,
       html: emailContent,
       replyTo: email
