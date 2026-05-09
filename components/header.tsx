@@ -39,12 +39,13 @@ export default function Header() {
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center min-h-16 py-1 gap-4">
             <Link href="/" className="flex items-center gap-2 min-w-0 shrink-0">
-              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center shrink-0">
-                <Ticket className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-800 bg-clip-text text-transparent truncate">
-                BiletOrg
-              </span>
+              <div className="flex items-center gap-2 min-w-0 shrink-0">
+              <img 
+                src="/org-logo.png" 
+                alt="Kurdevents Logo" 
+                className="h-20 w-auto max-w-[357px] object-contain"
+              />
+            </div>
             </Link>
 
             <div className="hidden lg:flex flex-1 flex-wrap items-center justify-end gap-x-3 gap-y-1 min-w-0">

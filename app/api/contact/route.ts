@@ -50,6 +50,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Production mode - send real email
+    console.log('PRODUCTION MODE - Attempting to send email...')
+    console.log('SMTP Settings:', {
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS ? '***SET***' : 'NOT_SET',
+      nodeEnv: process.env.NODE_ENV,
+      nextAuthUrl: process.env.NEXTAUTH_URL
+    })
+
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: parseInt(process.env.SMTP_PORT || '587'),

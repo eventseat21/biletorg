@@ -11,10 +11,9 @@ export function SiteFooter() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 mb-8">
           <div className="col-span-2 md:col-span-1 lg:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-                <Ticket className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-white">BiletOrg</span>
+              <p className="text-xl font-bold text-white">
+                KURDEVENTS.ORG
+              </p>
             </div>
             <p className="text-sm">
               Profesyonel etkinlik yönetimi ve bilet satış platformu.
@@ -107,7 +106,7 @@ export function SiteFooter() {
           </div>
         </div>
         <div className="border-t border-gray-800 pt-8 text-sm text-center">
-          © {new Date().getFullYear()} BiletOrg. Tüm hakları saklıdır.
+          © {new Date().getFullYear()} Kurdevents. Tüm hakları saklıdır.
         </div>
       </div>
     </footer>
