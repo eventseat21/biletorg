@@ -600,25 +600,25 @@ export default function SaalplanPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">B6 - VIP</span>
-                    <span className="font-medium">₺500</span>
+                    <span className="font-medium">€500</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">B7 - VIP</span>
-                    <span className="font-medium">₺500</span>
+                    <span className="font-medium">€500</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">C5 - Premium</span>
-                    <span className="font-medium">₺350</span>
+                    <span className="font-medium">€350</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">C6 - Premium</span>
-                    <span className="font-medium">₺350</span>
+                    <span className="font-medium">€350</span>
                   </div>
                 </div>
                 <div className="border-t mt-4 pt-4">
                   <div className="flex justify-between font-semibold">
                     <span>Toplam</span>
-                    <span>₺1.700</span>
+                    <span>€1.700</span>
                   </div>
                 </div>
                 <button className="w-full mt-4 py-3 bg-primary-600 text-white rounded-lg font-semibold">

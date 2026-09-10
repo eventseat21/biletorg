@@ -14,6 +14,11 @@ type SeatPayload = {
   type: string
   shape: string
   rotation?: number
+  status?: string | null
+  price?: number | null
+  zone?: string | null
+  blockId?: string | null
+  sectionId?: string | null
   svgId?: string | null
 }
 
@@ -53,6 +58,10 @@ export async function POST(
         const height = Math.max(8, Math.round(s.height || 24))
         const row = String(s.row || 'R')
         const number = String(s.number || '1')
+        const status = ['available', 'held', 'blocked', 'unavailable'].includes(s.status || '')
+          ? s.status!
+          : 'available'
+        const price = typeof s.price === 'number' && Number.isFinite(s.price) ? s.price : null
 
         const isNew = !s.id || s.id.startsWith('new-')
 
@@ -71,6 +80,11 @@ export async function POST(
               width,
               height,
               type: s.type || 'NORMAL',
+              status,
+              price,
+              zone: s.zone ?? null,
+              blockId: s.blockId ?? null,
+              sectionId: s.sectionId ?? null,
               shape: s.shape === 'rect' ? 'rect' : 'circle',
               rotation,
               svgId: s.svgId ?? undefined,
@@ -94,6 +108,11 @@ export async function POST(
               width,
               height,
               type: s.type || 'NORMAL',
+              status,
+              price,
+              zone: s.zone ?? null,
+              blockId: s.blockId ?? null,
+              sectionId: s.sectionId ?? null,
               shape: s.shape === 'rect' ? 'rect' : 'circle',
               rotation,
               svgId: s.svgId ?? undefined,

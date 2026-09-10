@@ -7,5 +7,5 @@ type HallRootPageProps = {
 }
 
 export default function HallRootPage({ params }: HallRootPageProps) {
-  redirect(`/organizer/halls/${params.id}/svg-editor`)
+  redirect(`/organizer/halls/${params.id}/seatmap`)
 }
