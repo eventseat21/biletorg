@@ -97,6 +97,7 @@ model Hall {
   stageHeight   Int       @default(600)
   
   svgSource     String?
+  layoutJson    Json?
   source        String    @default("manual")
   
   seats         Seat[]

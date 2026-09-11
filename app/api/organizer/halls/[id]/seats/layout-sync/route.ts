@@ -44,6 +44,7 @@ export async function POST(
     const body = await request.json()
     const seats: SeatPayload[] = body.seats || []
     const deletedSeatIds: string[] = body.deletedSeatIds || []
+    const layout = body.layout && typeof body.layout === 'object' ? body.layout : null
 
     await prisma.$transaction(async (tx) => {
       if (deletedSeatIds.length > 0) {
@@ -124,7 +125,10 @@ export async function POST(
       const count = await tx.seat.count({ where: { hallId: params.id } })
       await tx.hall.update({
         where: { id: params.id },
-        data: { capacity: count },
+        data: {
+          capacity: count,
+          ...(layout ? { layoutJson: layout } : {}),
+        },
       })
     })
 

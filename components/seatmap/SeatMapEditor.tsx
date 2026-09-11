@@ -112,6 +112,8 @@ interface StoredMeta {
   background?: ChartBackground
   seatZones?: Record<string, string>
   blockIds?: Record<string, string>
+  stage?: { width: number; height: number }
+  stagePosition?: WorldPoint
 }
 
 export default function SeatMapEditor({
@@ -215,6 +217,23 @@ export default function SeatMapEditor({
         if (!res.ok) throw new Error('Salon yüklenemedi')
         const data = await res.json()
         if (cancelled) return
+        const remoteMeta = data.layoutJson && typeof data.layoutJson === 'object'
+          ? (data.layoutJson as StoredMeta)
+          : null
+        if (remoteMeta) {
+          if (Array.isArray(remoteMeta.categories) && remoteMeta.categories.length > 0) setCategories(remoteMeta.categories)
+          if (Array.isArray(remoteMeta.zones)) {
+            setZones(remoteMeta.zones)
+            if (remoteMeta.zones.length > 0) setActiveZoneId(remoteMeta.zones[0].id)
+          }
+          if (remoteMeta.background) setBackground(remoteMeta.background)
+          if (remoteMeta.seatZones && typeof remoteMeta.seatZones === 'object') {
+            storedSeatZones = remoteMeta.seatZones
+            setSeatZones(remoteMeta.seatZones)
+          }
+          if (remoteMeta.blockIds && typeof remoteMeta.blockIds === 'object') storedBlockIds = remoteMeta.blockIds
+          if (remoteMeta.stagePosition) setStagePosition(remoteMeta.stagePosition)
+        }
         const mapped = ((data.seats ?? []) as ApiSeat[]).map(seatFromApi).map((s) => {
           const key = seatKey(s)
           const z = storedSeatZones[key]
@@ -227,12 +246,14 @@ export default function SeatMapEditor({
         })
         setSeats(mapped)
         persistedRef.current = new Set(persistedIds(mapped))
-        const loadedStage = {
+        const loadedStage = remoteMeta?.stage ?? {
           width: Number(data.stageWidth) || 1400,
           height: Number(data.stageHeight) || 900,
         }
         setStage(loadedStage)
-        setStagePosition({ x: Math.max(30, (loadedStage.width - 260) / 2), y: 35 })
+        if (!remoteMeta?.stagePosition) {
+          setStagePosition({ x: Math.max(30, (loadedStage.width - 260) / 2), y: 35 })
+        }
       } catch {
         if (!cancelled) setMessage('Salon yüklenirken hata oluştu.')
       } finally {
@@ -1098,10 +1119,23 @@ export default function SeatMapEditor({
         if (seats[i].blockId) savedBlockIds[seatKey(seats[i])] = seats[i].blockId as string
       }
       const deletedSeatIds = Array.from(persistedRef.current).filter((id) => !currentIds.has(id))
+      const layoutDocument: StoredMeta = {
+        categories,
+        zones,
+        background,
+        seatZones,
+        blockIds: savedBlockIds,
+        stage,
+        stagePosition,
+      }
       const res = await fetch(`/api/organizer/halls/${hallId}/seats/layout-sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ seats: seats.map(seatToPayload), deletedSeatIds }),
+        body: JSON.stringify({
+          seats: seats.map(seatToPayload),
+          deletedSeatIds,
+          layout: layoutDocument,
+        }),
       })
       if (!res.ok) throw new Error('Kayıt başarısız')
       const data = await res.json()
@@ -1110,7 +1144,11 @@ export default function SeatMapEditor({
         const key = seatKey(s)
         const z = seatZones[key]
         const blockId = savedBlockIds[key]
-        return { ...s, zone: z ?? null, blockId: blockId ?? null }
+        return {
+          ...s,
+          zone: z ?? s.zone ?? null,
+          blockId: blockId ?? s.blockId ?? null,
+        }
       })
       setSeats(mapped)
       persistedRef.current = new Set(persistedIds(mapped))
