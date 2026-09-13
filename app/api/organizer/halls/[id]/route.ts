@@ -18,12 +18,26 @@ export async function GET(
       id: params.id,
       organizerId: session.user.organizerId
     },
-    include: { seats: { orderBy: [{ row: 'asc' }, { number: 'asc' }] } }
+    include: {
+      seats: {
+        orderBy: [{ row: 'asc' }, { number: 'asc' }],
+        include: {
+          tickets: {
+            where: { status: { notIn: ['CANCELLED', 'REFUNDED'] } },
+            select: { id: true },
+            take: 1,
+          },
+        },
+      },
+    }
   })
 
   if (!hall) {
     return NextResponse.json({ error: 'Hall not found' }, { status: 404 })
   }
 
-  return NextResponse.json(hall)
+  return NextResponse.json({
+    ...hall,
+    seats: hall.seats.map(({ tickets, ...seat }) => ({ ...seat, locked: tickets.length > 0 })),
+  })
 }

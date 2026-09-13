@@ -168,8 +168,18 @@ model Event {
   hall          Hall?     @relation(fields: [hallId], references: [id])
   
   title         String
+  titleTr       String?
+  titleDe       String?
+  titleEn       String?
+  titleKu       String?
+  titleCkb      String?
   slug          String    @unique
   description   String?
+  descriptionTr String?
+  descriptionDe String?
+  descriptionEn String?
+  descriptionKu String?
+  descriptionCkb String?
   image         String?
   category      String?
   
@@ -180,6 +190,20 @@ model Event {
   status        String    @default("DRAFT")
   isPublished   Boolean   @default(false)
   publishedAt   DateTime?
+  commissionType  String    @default("PERCENT_DEDUCT")
+  commissionValue Float     @default(0)
+  commissionLocked Boolean  @default(false)
+  commissionSetAt DateTime?
+  commissionSetBy String?
+  rejectionReason String?
+
+  /// Senkronizasyon durumu: kurdevents.com satış veritabanındaki karşılıklar
+  salesEventId    String?
+  salesPlanId     String?
+  salesVenueId    String?
+  salesSyncedAt   DateTime?
+  salesSyncStatus String?
+  salesSyncError  String?
   
   ticketCategories TicketCategory[]
   orders        Order[]

@@ -1,48 +1,34 @@
 import { prisma } from '@/lib/prisma'
+import EventApprovalCard from './components/EventApprovalCard'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AdminEventsPage() {
-  const events = await prisma.event.findMany({
-    orderBy: { startDate: 'desc' },
-    take: 100,
-    include: {
-      organizer: { select: { companyName: true } },
-    },
-  })
-
+  const [events, publishedEvents] = await Promise.all([
+    prisma.event.findMany({
+      where: { status: 'PENDING_APPROVAL' },
+    orderBy: { createdAt: 'asc' },
+      include: { organizer: { select: { companyName: true, companyEmail: true } }, hall: { select: { name: true, capacity: true } } },
+    }),
+    prisma.event.findMany({
+      where: { status: 'PUBLISHED' },
+      orderBy: { updatedAt: 'desc' },
+      take: 50,
+      include: { organizer: { select: { companyName: true, companyEmail: true } }, hall: { select: { name: true, capacity: true } } },
+    }),
+  ])
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Etkinlikler</h1>
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-50 text-left text-gray-600">
-            <tr>
-              <th className="px-4 py-3">Başlık</th>
-              <th className="px-4 py-3">Organizatör</th>
-              <th className="px-4 py-3">Tarih</th>
-              <th className="px-4 py-3">Durum</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {events.map((e) => (
-              <tr key={e.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3 font-medium">{e.title}</td>
-                <td className="px-4 py-3">{e.organizer.companyName}</td>
-                <td className="px-4 py-3">
-                  {new Date(e.startDate).toLocaleString('tr-TR')}
-                </td>
-                <td className="px-4 py-3">
-                  {e.isPublished ? 'Yayın' : 'Taslak'} / {e.status}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {events.length === 0 && (
-          <p className="p-8 text-center text-gray-500">Etkinlik yok</p>
-        )}
-      </div>
+      <h1 className="mb-2 text-3xl font-bold text-gray-900">Etkinlik onayları</h1>
+      <p className="mb-8 text-gray-600">Komisyon anlaşmasını belirleyin, yayın kanallarını seçin ve etkinliği yayınlayın.</p>
+      <section>
+        <h2 className="mb-3 text-xl font-semibold text-gray-900">Onay bekleyen etkinlikler</h2>
+        {events.length === 0 ? <p className="text-sm text-gray-500">Onay bekleyen etkinlik yok.</p> : <ul className="space-y-5">{events.map((event) => <EventApprovalCard key={event.id} event={{ ...event, startDate: event.startDate.toISOString(), commissionValue: Number(event.commissionValue) }} />)}</ul>}
+      </section>
+      <section className="mt-12">
+        <h2 className="mb-3 text-xl font-semibold text-gray-900">Yayınlanan etkinlikler / yeniden sync</h2>
+        {publishedEvents.length === 0 ? <p className="text-sm text-gray-500">Yayınlanan etkinlik yok.</p> : <ul className="space-y-5">{publishedEvents.map((event) => <EventApprovalCard key={event.id} event={{ ...event, startDate: event.startDate.toISOString(), commissionValue: Number(event.commissionValue) }} />)}</ul>}
+      </section>
     </div>
   )
 }

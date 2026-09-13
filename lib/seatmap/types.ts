@@ -24,6 +24,8 @@ export interface SeatItem {
   blockId?: string | null
   svgId?: string | null
   status?: SeatStatus
+  /** Satılmış/aktif bilete bağlıysa salon editöründe değiştirilemez. */
+  locked?: boolean
 }
 
 /** Bir koltuk kategorisi (fiyat sınıfı). */

@@ -20,6 +20,7 @@ export interface ApiSeat {
   blockId?: string | null
   sectionId?: string | null
   svgId?: string | null
+  locked?: boolean | null
 }
 
 function normalizeShape(shape: string | null | undefined): SeatShape {
@@ -49,6 +50,7 @@ export function seatFromApi(raw: ApiSeat): SeatItem {
     zone: raw.zone ?? null,
     blockId: raw.blockId ?? null,
     svgId: raw.svgId ?? null,
+    locked: Boolean(raw.locked),
   }
 }
 
