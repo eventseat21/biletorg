@@ -478,7 +478,7 @@ export default function SeatMapCanvas({
 
           {chart.seats.map((seat) => {
             const category = categoryMap[seat.type] ?? getCategory(seat.type)
-            const isUnavailable = unavailableSet.has(seat.id) || seat.status === 'unavailable' || seat.status === 'blocked'
+            const isUnavailable = unavailableSet.has(seat.id) || seat.status === 'unavailable' || seat.status === 'blocked' || seat.locked
             const isSelected = selectedSet.has(seat.id)
             const isHeld = heldSet.has(seat.id) || seat.status === 'held'
 
@@ -486,7 +486,11 @@ export default function SeatMapCanvas({
             let stroke = '#1f2937'
             let strokeWidth = 1
 
-            if (isUnavailable) {
+            if (seat.locked) {
+              fill = '#94a3b8'
+              stroke = '#334155'
+              strokeWidth = 2
+            } else if (isUnavailable) {
               fill = '#d1d5db'
               stroke = '#9ca3af'
             } else if (isSelected) {

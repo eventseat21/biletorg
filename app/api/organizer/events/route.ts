@@ -44,7 +44,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 })
   }
 
-  let body: { title?: string; startDate?: string; description?: string }
+  let body: {
+    title?: string
+    titleTr?: string
+    titleDe?: string
+    titleEn?: string
+    titleKu?: string
+    titleCkb?: string
+    startDate?: string
+    description?: string
+    descriptionTr?: string
+    descriptionDe?: string
+    descriptionEn?: string
+    descriptionKu?: string
+    descriptionCkb?: string
+    image?: string
+    category?: string
+    startingPrice?: number | string
+    initialQuantity?: number | string
+    hallId?: string | null
+  }
   try {
     body = await request.json()
   } catch {
@@ -63,6 +82,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Geçersiz tarih' }, { status: 400 })
   }
 
+  const startingPrice = Number(body.startingPrice ?? 0)
+  const initialQuantity = Math.floor(Number(body.initialQuantity ?? 100))
+  if (!Number.isFinite(startingPrice) || startingPrice < 0) return NextResponse.json({ error: 'Başlangıç fiyatı geçersiz' }, { status: 400 })
+  if (!Number.isFinite(initialQuantity) || initialQuantity < 1) return NextResponse.json({ error: 'Bilet adedi 0’dan büyük olmalı' }, { status: 400 })
+
   const orgId = session.user.organizerId
   const baseSlug = slugifyTitle(title)
   let slug = baseSlug
@@ -72,14 +96,35 @@ export async function POST(request: Request) {
     slug = `${baseSlug}-${attempt + 1}`
   }
 
+  if (body.hallId) {
+    const hall = await prisma.hall.findFirst({
+      where: { id: body.hallId, organizerId: orgId },
+      select: { id: true },
+    })
+    if (!hall) return NextResponse.json({ error: 'Salon bulunamadı' }, { status: 400 })
+  }
+
   const event = await prisma.$transaction(async (tx) => {
     const e = await tx.event.create({
       data: {
         organizerId: orgId,
         title,
+        titleTr: body.titleTr?.trim() || title,
+        titleDe: body.titleDe?.trim() || null,
+        titleEn: body.titleEn?.trim() || null,
+        titleKu: body.titleKu?.trim() || null,
+        titleCkb: body.titleCkb?.trim() || null,
         slug,
         description: body.description?.trim() || null,
+        descriptionTr: body.descriptionTr?.trim() || body.description?.trim() || null,
+        descriptionDe: body.descriptionDe?.trim() || null,
+        descriptionEn: body.descriptionEn?.trim() || null,
+        descriptionKu: body.descriptionKu?.trim() || null,
+        descriptionCkb: body.descriptionCkb?.trim() || null,
+        image: body.image?.trim() || null,
+        category: body.category?.trim() || null,
         startDate: start,
+        hallId: body.hallId || null,
         status: 'DRAFT',
         isPublished: false,
       },
@@ -88,9 +133,9 @@ export async function POST(request: Request) {
       data: {
         eventId: e.id,
         name: 'Genel',
-        price: 0,
-        totalQuantity: 100,
-        availableQuantity: 100,
+        price: startingPrice,
+        totalQuantity: initialQuantity,
+        availableQuantity: initialQuantity,
       },
     })
     return e

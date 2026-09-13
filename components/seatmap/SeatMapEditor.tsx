@@ -335,7 +335,11 @@ export default function SeatMapEditor({
 
   const deleteSelected = () => {
     if (selected.size === 0) return
-    const ids = Array.from(selected)
+    const ids = Array.from(selected).filter((id) => !seats.find((seat) => seat.id === id)?.locked)
+    if (ids.length === 0) {
+      setMessage('Satılmış koltuklar silinemez.')
+      return
+    }
     removeSeatZones(ids)
     commit(seats.filter((s) => !selected.has(s.id)))
     setSelected(new Set())
@@ -347,7 +351,7 @@ export default function SeatMapEditor({
 
   const paintSeats = (ids: Iterable<string>, type: string) => {
     const idSet = new Set(ids)
-    commit(seats.map((s) => (idSet.has(s.id) ? { ...s, type } : s)))
+    commit(seats.map((s) => (idSet.has(s.id) && !s.locked ? { ...s, type } : s)))
   }
 
   // ---- Bölge (zone) -------------------------------------------------------
@@ -835,6 +839,14 @@ export default function SeatMapEditor({
   const handleSeatPointerDown = (seat: SeatItem, world: WorldPoint) => {
     // Yay önizleme koltukları henüz gerçek listeye eklenmemiştir.
     if (arcPreview.some((preview) => preview.id === seat.id)) return
+    if (seat.locked && (tool === 'erase' || tool === 'paint')) {
+      setMessage('Satılmış koltuklar değiştirilemez.')
+      return
+    }
+    if (seat.locked && tool === 'select') {
+      setMessage('Satılmış koltuk kilitli.')
+      return
+    }
     if (tool === 'erase') {
       removeSeatZones([seat.id])
       commit(seats.filter((s) => s.id !== seat.id))

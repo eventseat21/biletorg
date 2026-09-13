@@ -46,6 +46,12 @@ export async function PUT(
     if (data.rotation !== undefined) patch.rotation = Math.round(Number(data.rotation))
     if (data.type !== undefined) patch.type = String(data.type)
     if (data.shape !== undefined) patch.shape = String(data.shape)
+    const ticketCount = await prisma.ticket.count({
+      where: { seatId: params.seatId, status: { notIn: ['CANCELLED', 'REFUNDED'] } },
+    })
+    if (ticketCount > 0 && (data.row !== undefined || data.number !== undefined)) {
+      return NextResponse.json({ error: 'Satılmış veya aktif bilete bağlı koltuğun sıra/numarası değiştirilemez' }, { status: 409 })
+    }
     if (data.row !== undefined) patch.row = String(data.row)
     if (data.number !== undefined) patch.number = String(data.number)
 
@@ -94,8 +100,15 @@ export async function DELETE(
       return NextResponse.json({ error: 'Hall not found' }, { status: 404 })
     }
 
+    const ticketCount = await prisma.ticket.count({
+      where: { seatId: params.seatId, status: { notIn: ['CANCELLED', 'REFUNDED'] } },
+    })
+    if (ticketCount > 0) {
+      return NextResponse.json({ error: 'Satılmış veya aktif bilete bağlı koltuk silinemez' }, { status: 409 })
+    }
+
     await prisma.seat.delete({
-      where: { id: params.seatId }
+      where: { id: params.seatId, hallId: params.id }
     })
 
     return NextResponse.json({ success: true })

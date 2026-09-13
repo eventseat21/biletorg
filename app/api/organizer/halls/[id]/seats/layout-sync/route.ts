@@ -48,9 +48,17 @@ export async function POST(
 
     await prisma.$transaction(async (tx) => {
       if (deletedSeatIds.length > 0) {
-        await tx.seat.deleteMany({
-          where: { hallId: params.id, id: { in: deletedSeatIds } },
+        const protectedSeats = await tx.ticket.findMany({
+          where: { seatId: { in: deletedSeatIds }, status: { notIn: ['CANCELLED', 'REFUNDED'] } },
+          select: { seatId: true },
         })
+        const protectedIds = protectedSeats.map((ticket) => ticket.seatId).filter((id): id is string => Boolean(id))
+        const safeDeletedIds = deletedSeatIds.filter((id) => !protectedIds.includes(id))
+        if (safeDeletedIds.length > 0) {
+          await tx.seat.deleteMany({
+            where: { hallId: params.id, id: { in: safeDeletedIds } },
+          })
+        }
       }
 
       for (const s of seats) {
@@ -71,6 +79,10 @@ export async function POST(
             where: { id: s.id!, hallId: params.id },
           })
           if (!existing) continue
+          const protectedSeat = await tx.ticket.count({
+            where: { seatId: s.id!, status: { notIn: ['CANCELLED', 'REFUNDED'] } },
+          })
+          if (protectedSeat > 0 && (existing.row !== row || existing.number !== number)) continue
           await tx.seat.update({
             where: { id: s.id! },
             data: {
