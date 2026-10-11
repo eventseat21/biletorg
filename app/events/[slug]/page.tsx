@@ -2,9 +2,11 @@ import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/header'
+import Image from 'next/image'
 import { Calendar, MapPin, Ticket } from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
+// Event details are public and can be served from the Next.js cache for a short period.
+export const revalidate = 300
 
 export default async function PublicEventPage({ params }: { params: { slug: string } }) {
   const event = await prisma.event.findFirst({
@@ -20,7 +22,18 @@ export default async function PublicEventPage({ params }: { params: { slug: stri
   return (
     <div className="min-h-screen bg-gray-50"><Header /><main className="container mx-auto max-w-5xl px-4 pb-12 pt-32">
       <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
-        <div className="flex min-h-64 items-center justify-center bg-gradient-to-br from-indigo-100 to-blue-200 p-8">{event.image ? <img src={event.image} alt={event.title} className="max-h-72 w-full object-cover" /> : <Ticket className="h-24 w-24 text-indigo-400" />}</div>
+        <div className="flex min-h-64 items-center justify-center bg-gradient-to-br from-indigo-100 to-blue-200 p-8">{event.image ? (
+                    <Image
+                      src={event.image}
+                      alt={event.title}
+                      width={1280}
+                      height={720}
+                      sizes="(max-width: 768px) 100vw, 1024px"
+                      className="max-h-72 w-full object-cover"
+                    />
+                  ) : (
+                    <Ticket className="h-24 w-24 text-indigo-400" />
+                  )}</div>
         <div className="p-6 md:p-10">
           <p className="text-sm font-medium text-indigo-600">{event.organizer.organizationDisplayName || event.organizer.companyName}</p>
           <h1 className="mt-2 text-3xl font-bold text-gray-900 md:text-4xl">{event.title}</h1>

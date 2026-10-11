@@ -340,13 +340,15 @@ export default function SeatMapEditor({
       setMessage('Satılmış koltuklar silinemez.')
       return
     }
+    const idSet = new Set(ids)
+    const lockedCount = selected.size - ids.length
     removeSeatZones(ids)
-    commit(seats.filter((s) => !selected.has(s.id)))
+    commit(seats.filter((s) => !idSet.has(s.id)))
     setSelected(new Set())
     // Seçili yay silindiğinde canlı önizleme aynı koltukları geri getirmesin.
     setArcCenter(null)
     setRotationPreview(null)
-    setMessage(`${ids.length} koltuk silindi.`)
+    setMessage(lockedCount > 0 ? `${ids.length} koltuk silindi; ${lockedCount} kilitli koltuk korundu.` : `${ids.length} koltuk silindi.`)
   }
 
   const paintSeats = (ids: Iterable<string>, type: string) => {
@@ -889,20 +891,35 @@ export default function SeatMapEditor({
     }
 
     if (tool === 'add') {
+      const x = snapToGrid(world.x)
+      const y = snapToGrid(world.y)
+      const width = 26
+      const height = 26
+      const overlaps = seats.some((existing) =>
+        x < existing.x + existing.width &&
+        x + width > existing.x &&
+        y < existing.y + existing.height &&
+        y + height > existing.y
+      )
+      if (overlaps) {
+        setMessage('Bu konumda başka bir koltuk var. Koltuğu boş bir alana ekleyin.')
+        return
+      }
       const newSeat: SeatItem = {
         id: makeSeatId(),
         row: nextRowLabel(seats.map((s) => s.row)),
         number: '1',
-        x: snapToGrid(world.x),
-        y: snapToGrid(world.y),
-        width: 26,
-        height: 26,
+        x,
+        y,
+        width,
+        height,
         type: activeCategory,
         shape: 'circle',
         rotation: 0,
         zone: activeZoneId ?? null,
       }
       commit([...seats, newSeat])
+      setMessage('Koltuk eklendi.')
       return
     }
 
@@ -1149,8 +1166,10 @@ export default function SeatMapEditor({
           layout: layoutDocument,
         }),
       })
-      if (!res.ok) throw new Error('Kayıt başarısız')
-      const data = await res.json()
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        throw new Error(data?.error || data?.details || `Kayıt başarısız (${res.status})`)
+      }
       // Bölgeler veritabanında tutulmuyor; satır+numara üzerinden geri uygula.
       const mapped = ((data.seats ?? []) as ApiSeat[]).map(seatFromApi).map((s) => {
         const key = seatKey(s)
@@ -1169,8 +1188,8 @@ export default function SeatMapEditor({
       setFuture([])
       setDirty(false)
       setMessage('Salon kaydedildi.')
-    } catch {
-      setMessage('Kayıt sırasında hata oluştu.')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Kayıt sırasında hata oluştu.')
     } finally {
       setSaving(false)
     }
@@ -1296,7 +1315,10 @@ const chart: ChartDoc = useMemo(
             panOnBackgroundDrag={tool === 'pan'}
             stageLabel="SAHNE"
             stagePosition={stagePosition}
-            onStagePositionChange={setStagePosition}
+            onStagePositionChange={(position) => {
+              setStagePosition(position)
+              setDirty(true)
+            }}
             zones={zones}
             activeZoneId={activeZoneId}
             className="h-full w-full"

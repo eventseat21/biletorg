@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   if (!(file instanceof File)) return NextResponse.json({ error: 'Görsel dosyası gerekli' }, { status: 400 })
   const extension = allowedTypes[file.type]
   if (!extension) return NextResponse.json({ error: 'Sadece JPG, PNG veya WebP yüklenebilir' }, { status: 400 })
-  if (file.size > 5 * 1024 * 1024) return NextResponse.json({ error: 'Görsel 5 MB’dan küçük olmalı' }, { status: 400 })
+  if (file.size > 2 * 1024 * 1024) return NextResponse.json({ error: 'Görsel 2 MB’dan küçük olmalı' }, { status: 400 })
 
   const directory = path.join(process.cwd(), 'public', 'uploads', 'events')
   await mkdir(directory, { recursive: true })

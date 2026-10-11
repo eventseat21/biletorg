@@ -3,6 +3,7 @@
 -- Run this in Supabase SQL Editor
 
 -- Enable RLS on all tables
+ALTER TABLE "_prisma_migrations" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "users" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "organizers" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "ticket_checkers" ENABLE ROW LEVEL SECURITY;
@@ -62,8 +63,8 @@ DROP POLICY IF EXISTS "password_resets_insert_policy" ON "password_resets";
 DROP POLICY IF EXISTS "password_resets_update_policy" ON "password_resets";
 
 -- Create RLS policies
--- Note: Service role key bypasses RLS automatically, so server-side operations via Prisma will work
--- These policies restrict client-side access only
+-- Note: Service role key and Prisma (connecting as postgres) bypass RLS automatically.
+-- These policies restrict client-side / PostgREST access.
 
 -- Users table: Allow authenticated users to read their own data, admins to read all
 CREATE POLICY "users_select_policy" ON "users"
@@ -74,11 +75,8 @@ CREATE POLICY "users_select_policy" ON "users"
     role = 'ADMIN'
   );
 
--- Users table: Allow registration (insert) for public
-CREATE POLICY "users_insert_policy" ON "users"
-  FOR INSERT
-  TO anon, authenticated
-  WITH CHECK (true);
+-- Registration is handled server-side via Next.js API (/api/auth/register) with bcrypt hashing.
+-- No anon INSERT is permitted directly through Supabase REST API.
 
 -- Users table: Allow users to update their own data, admins to update all
 CREATE POLICY "users_update_policy" ON "users"
@@ -456,11 +454,8 @@ CREATE POLICY "password_resets_select_policy" ON "password_resets"
   TO authenticated
   USING ("userId" = auth.uid()::text);
 
--- Password resets table: Allow creating password resets (public for forgot password)
-CREATE POLICY "password_resets_insert_policy" ON "password_resets"
-  FOR INSERT
-  TO anon, authenticated
-  WITH CHECK (true);
+-- Password resets table: Handled server-side via Next.js API (/api/auth/forgot-password)
+-- No anon INSERT is permitted directly through Supabase REST API.
 
 -- Password resets table: Allow updating own password resets
 CREATE POLICY "password_resets_update_policy" ON "password_resets"

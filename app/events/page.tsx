@@ -6,7 +6,8 @@ import { formatPrice } from '@/lib/utils'
 import Header from '@/components/header'
 import { Calendar, MapPin } from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
+// Public listing can be cached briefly to avoid hitting the database and image origin on every visit.
+export const revalidate = 300
 
 async function getPublishedEvents() {
   try {
@@ -60,7 +61,14 @@ export default async function EventsPage() {
               >
                 <div className="h-48 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
                   {event.image ? (
-                    <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
+                    <Image
+                      src={event.image}
+                      alt={event.title}
+                      width={640}
+                      height={360}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
                     <Calendar className="w-16 h-16 text-primary-400" />
                   )}

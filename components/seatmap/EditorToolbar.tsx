@@ -173,8 +173,8 @@ export default function EditorToolbar({
       </div>
 
       <div className="flex items-center gap-3">
-        <span className="text-xs text-slate-500">
-          {selectionCount > 0 ? `${selectionCount} koltuk seçili` : 'Seçim yok'}
+        <span className={`text-xs ${dirty ? 'font-medium text-amber-700' : 'text-slate-500'}`}>
+          {dirty ? 'Kaydedilmemiş değişiklikler' : selectionCount > 0 ? `${selectionCount} koltuk seçili` : 'Seçim yok'}
         </span>
         <button
           type="button"
