@@ -61,7 +61,7 @@ export default function SeatMapSelector({
     <div className="flex h-full min-h-[640px] flex-col bg-slate-100">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-5 py-4">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-indigo-600">Biletorg</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-indigo-600">kurdevents.org</p>
           <h1 className="text-xl font-bold text-slate-900">{title}</h1>
           <p className="mt-1 text-xs text-slate-500">{dateLabel}</p>
         </div>

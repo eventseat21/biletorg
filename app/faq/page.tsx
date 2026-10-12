@@ -64,16 +64,16 @@ const faqs = [
     categoryName: 'Genel',
     questions: [
       {
-        q: 'BiletOrg nedir?',
-        a: 'BiletOrg, etkinlik organizatörleri için profesyonel bilet satış ve yönetim platformudur. Kendi bilet mağazanızı oluşturun, salon planı tasarlayın ve etkinliklerinizi kolayca yönetin.'
+        q: 'kurdevents.org nedir?',
+        a: 'kurdevents.org, etkinlik organizatörleri için profesyonel bilet satış ve yönetim platformudur. Kendi bilet mağazanızı oluşturun, salon planı tasarlayın ve etkinliklerinizi kolayca yönetin.'
       },
       {
-        q: 'BiletOrg kimler için uygun?',
+        q: 'kurdevents.org kimler için uygun?',
         a: 'Konser organizatörleri, tiyatro yöneticileri, konferans planlayıcıları, spor kulüpleri, eğitim kurumları ve her türlü etkinlik düzenleyen profesyoneller için idealdir.'
       },
       {
         q: 'Ücretsiz deneme süresi var mı?',
-        a: 'Evet! BiletOrg\'u tamamen ücretsiz deneyebilirsiniz. Etkinlik oluşturmak, salon planı hazırlamak ve bilet satışına başlamak için hiçbir ücret ödemezsiniz. Sadece bilet sattığınızda %5 komisyon ödersiniz.'
+        a: 'Evet! kurdevents.org\'u tamamen ücretsiz deneyebilirsiniz. Etkinlik oluşturmak, salon planı hazırlamak ve bilet satışına başlamak için hiçbir ücret ödemezsiniz. Sadece bilet sattığınızda %5 komisyon ödersiniz.'
       }
     ]
   },
@@ -87,7 +87,7 @@ const faqs = [
       },
       {
         q: 'Gizli maliyet var mı?',
-        a: 'Hayır. BiletOrg\'da gizli maliyet yoktur. İşlem ücretleri, entegrasyon ücretleri veya ekstra ücretler talep etmeyiz. Gördüğünüz %5 komisyon tek maliyetinizdir.'
+        a: 'Hayır. kurdevents.org\'da gizli maliyet yoktur. İşlem ücretleri, entegrasyon ücretleri veya ekstra ücretler talep etmeyiz. Gördüğünüz %5 komisyon tek maliyetinizdir.'
       },
       {
         q: 'Ödemeler ne zaman hesabıma geçer?',
@@ -171,7 +171,7 @@ const faqs = [
       },
       {
         q: 'Sorun yaşarsam ne yapmalıyım?',
-        a: 'Canlı destek hattımızdan veya destek@biletorg.com adresinden bize ulaşabilirsiniz. Sorunlarınızı en kısa sürede çözüyoruz.'
+        a: 'Canlı destek hattımızdan veya destek@kurdevents.org adresinden bize ulaşabilirsiniz. Sorunlarınızı en kısa sürede çözüyoruz.'
       }
     ]
   }
@@ -226,7 +226,7 @@ export default function FAQPage() {
             Sık Sorulan Sorular
           </h1>
           <p className="text-xl md:text-2xl text-primary-100 max-w-2xl mx-auto leading-relaxed">
-            BiletOrg hakkında merak ettiğiniz soruların cevapları burada.
+            kurdevents.org hakkında merak ettiğiniz soruların cevapları burada.
           </p>
         </div>
       </section>
@@ -423,7 +423,7 @@ export default function FAQPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <a 
-              href="mailto:destek@biletorg.com"
+              href="mailto:destek@kurdevents.org"
               className="inline-flex items-center gap-2 px-8 py-4 bg-white text-indigo-600 rounded-xl font-semibold hover:bg-gray-100 transition-colors shadow-lg"
             >
               E-posta Gönder

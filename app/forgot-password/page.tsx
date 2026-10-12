@@ -58,7 +58,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="text-3xl font-bold text-primary-600">
-            BiletOrg
+            kurdevents.org
           </Link>
           <p className="text-gray-600 mt-2">Şifrenizi sıfırlayın</p>
         </div>

@@ -28,7 +28,7 @@ export default function HomePage() {
               güçlü bilet satışıyla başlar
             </h1>
             <p className="text-xl md:text-2xl text-primary-100 mb-8 leading-relaxed">
-              BiletOrg; organizatörler için salon planı tasarlama, bilet
+              kurdevents.org; organizatörler için salon planı tasarlama, bilet
               kategorilerini oluşturma, online ve gişe satışını tek platformda
               birleştirir. Kendi bilet mağazanızı dakikalar içinde açıp satışa
               hemen başlayın.

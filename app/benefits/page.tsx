@@ -48,7 +48,7 @@ export default function BenefitsPage() {
         <div className="container mx-auto px-4 py-24 md:py-32 relative text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-medium mb-6">
             <Sparkles className="w-4 h-4" />
-            Neden BiletOrg?
+            Neden kurdevents.org?
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
             Etkinlik Düzenlemenin{' '}

@@ -1,4 +1,4 @@
-# BiletOrg - Etkinlik Bilet Platformu
+# kurdevents.org - Etkinlik Bilet Platformu
 
 Eventim Light benzeri, organizatörler için profesyonel bilet yönetim sistemi.
 

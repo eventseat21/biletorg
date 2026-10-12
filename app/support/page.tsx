@@ -149,7 +149,7 @@ export default function SupportPage() {
         <div className="container relative mx-auto max-w-4xl px-4 py-24 text-center md:px-4 md:py-32">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm">
             <MessageSquare className="h-4 w-4" />
-            BiletOrg destek
+            kurdevents.org destek
           </div>
           <h1 className="mb-6 text-4xl font-bold leading-tight text-white md:text-6xl">
             Destek Al

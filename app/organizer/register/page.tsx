@@ -127,7 +127,7 @@ export default function OrganizerRegisterPage() {
       <div className="container mx-auto px-4 max-w-2xl">
         <div className="text-center mb-8">
           <Link href="/" className="text-3xl font-bold text-primary-600">
-            BiletOrg
+            kurdevents.org
           </Link>
           <p className="text-gray-600 mt-2">Organizatör kayıt formu</p>
           <p className="text-sm text-gray-500 mt-2 max-w-md mx-auto">

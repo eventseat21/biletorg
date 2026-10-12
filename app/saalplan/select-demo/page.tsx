@@ -113,7 +113,7 @@ export default function SeatSelectionDemoPage() {
         <SeatMapSelector
           chart={chart}
           zones={ZONES}
-          title="Biletorg Konser Arena"
+          title="kurdevents.org Konser Arena"
           dateLabel="12 Ekim 2026 · 20:00 · Salon planı"
         />
       </div>

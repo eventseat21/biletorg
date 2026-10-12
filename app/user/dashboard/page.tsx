@@ -54,7 +54,7 @@ export default function UserDashboardPage() {
               <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center">
                 <Ticket className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">BiletOrg</span>
+              <span className="text-xl font-bold text-gray-900">kurdevents.org</span>
             </Link>
             <div className="flex items-center gap-4">
               <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg relative">

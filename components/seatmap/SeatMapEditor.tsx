@@ -1058,7 +1058,7 @@ export default function SeatMapEditor({
   const exportJson = () => {
     const document = {
       version: 1,
-      name: 'Biletorg Salon Planı',
+      name: 'kurdevents.org Salon Planı',
       stage,
       stagePosition,
       seats,
@@ -1072,7 +1072,7 @@ export default function SeatMapEditor({
     const url = URL.createObjectURL(blob)
     const link = window.document.createElement('a')
     link.href = url
-    link.download = 'biletorg-seatmap.json'
+    link.download = 'kurdevents-seatmap.json'
     link.click()
     URL.revokeObjectURL(url)
     setMessage('Salon JSON olarak indirildi.')
@@ -1198,7 +1198,7 @@ export default function SeatMapEditor({
 const chart: ChartDoc = useMemo(
     () => ({
       version: 1,
-      name: 'Biletorg Salon Planı',
+      name: 'kurdevents.org Salon Planı',
       stage,
       stagePosition,
       seats: displaySeats,

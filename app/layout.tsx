@@ -5,7 +5,7 @@ import { Providers } from '@/components/providers'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'BiletOrg - Etkinlik Bilet Platformu',
+  title: 'kurdevents.org - Etkinlik Bilet Platformu',
   description: 'Organizatörler için profesyonel bilet yönetim sistemi',
 }
 

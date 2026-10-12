@@ -417,7 +417,7 @@ export default function PricingPage() {
                 Aylık ücret var mı?
               </h4>
               <p className="text-gray-600">
-                Hayır, BiletOrg'da aylık ücret yoktur. Sadece sattığınız bilet başına komisyon ödersiniz. 
+                Hayır, kurdevents.org'da aylık ücret yoktur. Sadece sattığınız bilet başına komisyon ödersiniz. 
                 Etkinlik oluşturmak, salon planı hazırlamak tamamen ücretsizdir.
               </p>
             </div>

@@ -78,7 +78,7 @@ export default function CheckerRegisterPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="text-3xl font-bold text-primary-600">
-            BiletOrg
+            kurdevents.org
           </Link>
           <p className="text-gray-600 mt-2 flex items-center justify-center gap-2">
             <ScanLine className="w-5 h-5" />

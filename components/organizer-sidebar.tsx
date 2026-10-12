@@ -31,7 +31,7 @@ export function OrganizerSidebar() {
     <aside className="w-64 bg-white border-r border-gray-200 min-h-screen flex flex-col">
       <div className="p-6 border-b border-gray-200">
         <Link href="/organizer" className="text-xl font-bold text-primary-600">
-          BiletOrg
+          kurdevents.org
         </Link>
         <p className="text-sm text-gray-500 mt-1">Organizatör Paneli</p>
       </div>
