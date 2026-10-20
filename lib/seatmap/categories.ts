@@ -1,34 +1,111 @@
 // Koltuk kategorileri ve renk paleti (v3).
-import type { CategoryDef } from './types'
+import type { CategoryDef, SeatItem } from './types'
 
-// Mevcut veritabanındaki koltuk tipleriyle birebir uyumlu renk paleti.
-// (eski svg-hall-editor.tsx içindeki SEAT_COLORS ile aynı)
+/**
+ * Yeni salonda gelen başlangıç seti. Bilinçli olarak kısa: organizatör
+ * "Kategoriler" sekmesinden ekler, araç çubuğu kalabalıklaşmaz.
+ */
 export const DEFAULT_CATEGORIES: CategoryDef[] = [
-  { key: 'NORMAL', label: 'Normal', color: '#6b7280', textColor: '#ffffff' },
-  { key: 'VIP', label: 'VIP', color: '#fbbf24', textColor: '#1f2937' },
-  { key: 'PREMIUM', label: 'Premium', color: '#3b82f6', textColor: '#ffffff' },
-  { key: 'ACCESSIBLE', label: 'Engelli', color: '#10b981', textColor: '#ffffff' },
-  { key: 'CATEGORY_1', label: 'Kategori 1', color: '#ef4444', textColor: '#ffffff' },
-  { key: 'CATEGORY_2', label: 'Kategori 2', color: '#f97316', textColor: '#ffffff' },
-  { key: 'CATEGORY_3', label: 'Kategori 3', color: '#eab308', textColor: '#1f2937' },
-  { key: 'CATEGORY_4', label: 'Kategori 4', color: '#84cc16', textColor: '#1f2937' },
-  { key: 'CATEGORY_5', label: 'Kategori 5', color: '#06b6d4', textColor: '#ffffff' },
-  { key: 'CATEGORY_6', label: 'Kategori 6', color: '#0ea5e9', textColor: '#ffffff' },
-  { key: 'CATEGORY_7', label: 'Kategori 7', color: '#8b5cf6', textColor: '#ffffff' },
-  { key: 'CATEGORY_8', label: 'Kategori 8', color: '#d946ef', textColor: '#ffffff' },
-  { key: 'CATEGORY_9', label: 'Kategori 9', color: '#ec4899', textColor: '#ffffff' },
-  { key: 'CATEGORY_10', label: 'Kategori 10', color: '#f43f5e', textColor: '#ffffff' },
+  { key: 'CATEGORY_1', label: 'Kategori 1', color: '#e11d48', textColor: '#ffffff' },
+  { key: 'CATEGORY_2', label: 'Kategori 2', color: '#ea580c', textColor: '#ffffff' },
+  { key: 'CATEGORY_3', label: 'Kategori 3', color: '#facc15', textColor: '#1f2937' },
+  { key: 'CATEGORY_4', label: 'Kategori 4', color: '#16a34a', textColor: '#ffffff' },
+  { key: 'VIP', label: 'VIP', color: '#7c3aed', textColor: '#ffffff' },
+  { key: 'ACCESSIBLE', label: 'Engelli', color: '#0d9488', textColor: '#ffffff' },
 ]
 
-const CATEGORY_MAP: Record<string, CategoryDef> = Object.fromEntries(
-  DEFAULT_CATEGORIES.map((c) => [c.key, c])
-)
+/**
+ * Eski salonlarda kalmış tip anahtarlarının renkleri. Yeni salonlarda listeye
+ * girmez; veritabanından gelen tipler doğru renkle çizilsin diye tutulur.
+ */
+export const LEGACY_CATEGORY_COLORS: Record<string, { color: string; textColor: string }> = {
+  NORMAL: { color: '#6b7280', textColor: '#ffffff' },
+  PREMIUM: { color: '#3b82f6', textColor: '#ffffff' },
+  CATEGORY_5: { color: '#2563eb', textColor: '#ffffff' },
+  CATEGORY_6: { color: '#0284c7', textColor: '#ffffff' },
+  CATEGORY_7: { color: '#7c3aed', textColor: '#ffffff' },
+  CATEGORY_8: { color: '#c026d3', textColor: '#ffffff' },
+  CATEGORY_9: { color: '#db2777', textColor: '#ffffff' },
+  CATEGORY_10: { color: '#f43f5e', textColor: '#ffffff' },
+}
+
+/** Koltukta tipi olup kategorisi olmayan salonlar için canlı renk döngüsü. */
+export const CATEGORY_AUTO_COLORS = [
+  '#2563eb', '#db2777', '#0891b2', '#65a30d', '#f59e0b',
+  '#dc2626', '#4f46e5', '#be123c', '#047857', '#b45309',
+]
+
+const CATEGORY_MAP: Record<string, CategoryDef> = {
+  ...Object.fromEntries(
+    Object.entries(LEGACY_CATEGORY_COLORS).map(([key, colors]) => [
+      key,
+      { key, label: key, ...colors },
+    ]),
+  ),
+  ...Object.fromEntries(DEFAULT_CATEGORIES.map((c) => [c.key, c])),
+}
 
 /** Verilen kategori listesinden hızlı arama tablosu üretir. */
 export function buildCategoryMap(categories: CategoryDef[]): Record<string, CategoryDef> {
   const map: Record<string, CategoryDef> = {}
   for (let i = 0; i < categories.length; i++) map[categories[i].key] = categories[i]
   return map
+}
+
+/**
+ * Koltuklarda kullanılan ama kategori listesinde olmayan tipleri listeye ekler.
+ * `applyPrices` true ise kategori fiyatı koltuklara yazılır; false ise koltuğun
+ * veritabanından gelen kendi fiyatı korunur.
+ */
+export function ensureSeatCategories(
+  categories: CategoryDef[],
+  seats: readonly Pick<SeatItem, 'type'>[],
+  applyPrices = false,
+): CategoryDef[] {
+  const known = new Set(categories.map((c) => c.key))
+  const missing: string[] = []
+  for (let i = 0; i < seats.length; i++) {
+    const type = seats[i].type
+    if (!type || known.has(type)) continue
+    known.add(type)
+    missing.push(type)
+  }
+  if (missing.length === 0) return categories
+  const priceByType = new Map<string, number>()
+  if (applyPrices) {
+    for (let i = 0; i < seats.length; i++) {
+      const seat = seats[i] as SeatItem
+      if (typeof seat.price === 'number' && !priceByType.has(seat.type)) {
+        priceByType.set(seat.type, seat.price)
+      }
+    }
+  }
+  return [
+    ...categories,
+    ...missing.map((key, index) => {
+      const legacy = LEGACY_CATEGORY_COLORS[key]
+      const price = priceByType.get(key)
+      return {
+        key,
+        label: key.replace(/_/g, ' ').toLowerCase().replace(/^\w/, (ch) => ch.toUpperCase()),
+        color: legacy?.color ?? CATEGORY_AUTO_COLORS[index % CATEGORY_AUTO_COLORS.length],
+        textColor: legacy?.textColor ?? '#ffffff',
+        ...(price === undefined ? {} : { price }),
+      }
+    }),
+  ]
+}
+
+/** Koltuğun kategori anahtarını, fiyatını ve .com bölüm adını koltuğa yazar. */
+export function applyCategory(seat: SeatItem, category: CategoryDef | undefined): SeatItem {
+  if (!category) return seat
+  const label = (category.label || category.key).trim()
+  return {
+    ...seat,
+    type: category.key,
+    price: Number.isFinite(category.price as number) ? (category.price as number) : null,
+    sectionId: label,
+  }
 }
 
 /** Yeni kategori için çakışmayan bir anahtar üretir (CUSTOM_1, CUSTOM_2 ...). */

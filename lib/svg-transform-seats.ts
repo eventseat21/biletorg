@@ -141,24 +141,34 @@ function getNumber(el: Element, attr: string): number | null {
   return v != null && v !== '' ? parseFloat(v) : null
 }
 
-/** Aynı sıraya düşen koltukların dikey kaymasını giderir; X ve aralıkları korur (fan/kavis planlar bozulmaz). */
-export function alignSeatRowsVertically(
+function median(values: number[]): number {
+  if (values.length === 0) return 0
+  const sorted = [...values].sort((a, b) => a - b)
+  return sorted[Math.floor(sorted.length / 2)]
+}
+
+/**
+ * Koltukları dikey konumlarına göre satır demetlerine ayırır.
+ * Eşik, medyan koltuk yüksekliğinin `rowToleranceFactor` katıdır; böylece
+ * küçük ölçekli planlarda tek satır, büyük planlarda kavis korunur.
+ */
+export function clusterSeatRows(
   seats: RawSeatCandidate[],
-  opts?: { rowToleranceFactor?: number }
-): RawSeatCandidate[] {
-  if (seats.length === 0) return seats
-  const factor = opts?.rowToleranceFactor ?? 0.55
-  const heights = seats.map((s) => s.height).sort((a, b) => a - b)
-  const medianH = heights[Math.floor(heights.length / 2)] || 24
-  const rowTol = Math.max(12, medianH * factor)
+  rowToleranceFactor = 0.55
+): RawSeatCandidate[][] {
+  if (seats.length === 0) return []
+  const medianH = median(seats.map((s) => s.height)) || 24
+  const rowTol = Math.max(12, medianH * rowToleranceFactor)
 
   const sorted = [...seats].sort((a, b) => a.y - b.y || a.x - b.x)
   const rows: RawSeatCandidate[][] = []
   let current: RawSeatCandidate[] = []
-  let rowMeanY = sorted[0].y + sorted[0].height / 2
+  let rowMeanY = 0
+
+  const centerY = (seat: RawSeatCandidate) => seat.y + seat.height / 2
 
   for (const s of sorted) {
-    const cy = s.y + s.height / 2
+    const cy = centerY(s)
     if (current.length === 0) {
       current.push(s)
       rowMeanY = cy
@@ -166,7 +176,7 @@ export function alignSeatRowsVertically(
     }
     if (Math.abs(cy - rowMeanY) <= rowTol) {
       current.push(s)
-      rowMeanY = current.reduce((acc, t) => acc + t.y + t.height / 2, 0) / current.length
+      rowMeanY = current.reduce((acc, t) => acc + centerY(t), 0) / current.length
     } else {
       rows.push(current)
       current = [s]
@@ -174,16 +184,20 @@ export function alignSeatRowsVertically(
     }
   }
   if (current.length) rows.push(current)
+  return rows
+}
 
+/** Aynı sıraya düşen koltukların dikey kaymasını giderir; X ve aralıkları korur (fan/kavis planlar bozulmaz). */
+export function alignSeatRowsVertically(
+  seats: RawSeatCandidate[],
+  opts?: { rowToleranceFactor?: number }
+): RawSeatCandidate[] {
+  const rows = clusterSeatRows(seats, opts?.rowToleranceFactor)
   const out: RawSeatCandidate[] = []
   for (const row of rows) {
-    const targetY =
-      row.reduce((acc, t) => acc + t.y + t.height / 2, 0) / row.length
+    const targetY = row.reduce((acc, t) => acc + t.y + t.height / 2, 0) / row.length
     for (const s of row) {
-      out.push({
-        ...s,
-        y: Math.round(targetY - s.height / 2),
-      })
+      out.push({ ...s, y: Math.round(targetY - s.height / 2) })
     }
   }
   return out.sort((a, b) => a.y - b.y || a.x - b.x)
@@ -257,6 +271,118 @@ export function separateOverlappingCandidates(
     if (!moved) break
   }
   return result
+}
+
+export type SeatColumn = { index: number; start: number; end: number }
+
+/**
+ * x eksenindeki büyük boşlukları koridor kabul edip koltukları dikey bloklara
+ * (stand) ayırır. Eşik medyan koltuk genişliğinin `aisleFactor` katıdır.
+ */
+export function detectSeatColumns(
+  seats: RawSeatCandidate[],
+  aisleFactor = 1.5
+): SeatColumn[] {
+  if (seats.length === 0) return []
+  const medianW = median(seats.map((s) => s.width)) || 24
+  const threshold = Math.max(medianW * aisleFactor, 10)
+  const intervals = seats
+    .map((s) => ({ start: s.x, end: s.x + s.width }))
+    .sort((a, b) => a.start - b.start)
+
+  const columns: SeatColumn[] = []
+  for (const interval of intervals) {
+    const last = columns[columns.length - 1]
+    if (last && interval.start - last.end <= threshold) {
+      last.end = Math.max(last.end, interval.end)
+    } else {
+      columns.push({ index: columns.length, start: interval.start, end: interval.end })
+    }
+  }
+  return columns
+}
+
+function columnIndexForX(columns: SeatColumn[], x: number): number {
+  let best = 0
+  let bestDistance = Number.POSITIVE_INFINITY
+  for (const column of columns) {
+    if (x >= column.start && x <= column.end) return column.index
+    const distance = x < column.start ? column.start - x : x - column.end
+    if (distance < bestDistance) {
+      bestDistance = distance
+      best = column.index
+    }
+  }
+  return best
+}
+
+/** Kesişen koltuk çifti sayısı; mekânsal hash ile tek geçişte hesaplanır. */
+export function countOverlappingSeats(seats: RawSeatCandidate[]): number {
+  if (seats.length < 2) return 0
+  const cell = Math.max(24, median(seats.map((s) => Math.max(s.width, s.height))) * 2)
+  const buckets = new Map<string, number[]>()
+  const key = (x: number, y: number) => `${Math.floor(x / cell)},${Math.floor(y / cell)}`
+  let collisions = 0
+
+  seats.forEach((seat, index) => {
+    const cx = seat.x + seat.width / 2
+    const cy = seat.y + seat.height / 2
+    const cellX = Math.floor(cx / cell)
+    const cellY = Math.floor(cy / cell)
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        const bucket = buckets.get(`${cellX + dx},${cellY + dy}`)
+        if (!bucket) continue
+        for (const other of bucket) {
+          if (overlapArea(seats[other], seat) > 0) collisions++
+        }
+      }
+    }
+    const own = buckets.get(key(cx, cy))
+    if (own) own.push(index)
+    else buckets.set(key(cx, cy), [index])
+  })
+  return collisions
+}
+
+export type SeatGridSeat = RawSeatCandidate & { rowIndex: number; columnIndex: number }
+
+export type SeatGrid = {
+  seats: SeatGridSeat[]
+  columns: SeatColumn[]
+  rowCount: number
+  columnCount: number
+  collisions: number
+}
+
+/** Koltukları satır (y) ve blok (x koridoru) koordinat sistemine oturtur. */
+export function groupSeatsIntoGrid(
+  seats: RawSeatCandidate[],
+  opts?: { rowToleranceFactor?: number; aisleFactor?: number }
+): SeatGrid {
+  const columns = detectSeatColumns(seats, opts?.aisleFactor)
+  const rows = clusterSeatRows(seats, opts?.rowToleranceFactor)
+  const placed: SeatGridSeat[] = []
+
+  rows.forEach((row, rowIndex) => {
+    for (const seat of row) {
+      placed.push({
+        ...seat,
+        rowIndex,
+        columnIndex: columns.length
+          ? columnIndexForX(columns, seat.x + seat.width / 2)
+          : 0,
+      })
+    }
+  })
+
+  return {
+    seats: placed,
+    columns,
+    rowCount: rows.length,
+    columnCount: columns.length,
+    collisions: countOverlappingSeats(seats),
+  }
 }
 
 export function extractSeatsWithTransforms(document: Document): RawSeatCandidate[] {

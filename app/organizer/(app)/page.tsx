@@ -30,7 +30,7 @@ async function getDashboardData(organizerId: string) {
   const revenue = await prisma.order.aggregate({
     where: {
       event: { organizerId },
-      paymentStatus: 'COMPLETED'
+      paymentStatus: 'PAID'
     },
     _sum: {
       organizerAmount: true
@@ -96,7 +96,7 @@ export default async function OrganizerDashboard() {
         />
         <StatCard
           title="Toplam Gelir"
-          value={`${data.revenue.toLocaleString('tr-TR')} ₺`}
+          value={`€${data.revenue.toFixed(2)}`}
           subtitle="Net kazanç"
           icon={<DollarSign className="w-6 h-6 text-emerald-600" />}
           color="emerald"

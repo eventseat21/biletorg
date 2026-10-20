@@ -47,6 +47,8 @@ export function seatFromApi(raw: ApiSeat): SeatItem {
     shape: normalizeShape(raw.shape),
     rotation: Math.round(raw.rotation ?? 0),
     status: normalizeStatus(raw.status),
+    price: typeof raw.price === 'number' && Number.isFinite(raw.price) ? raw.price : null,
+    sectionId: raw.sectionId ?? null,
     zone: raw.zone ?? null,
     blockId: raw.blockId ?? null,
     svgId: raw.svgId ?? null,
@@ -87,15 +89,59 @@ export function seatToPayload(seat: SeatItem): SeatPayload {
     shape: seat.shape,
     rotation: Math.round(seat.rotation),
     status: seat.status ?? 'available',
-    price: undefined,
+    price: typeof seat.price === 'number' && Number.isFinite(seat.price) ? seat.price : null,
     zone: seat.zone ?? null,
     blockId: seat.blockId ?? null,
-    sectionId: undefined,
+    sectionId: seat.sectionId ?? null,
     svgId: seat.svgId ?? null,
   }
 }
 
-/** Kayıtlı (persisted) koltuk kimliklerini ayıklar. */
-export function persistedIds(seats: SeatItem[]): string[] {
-  return seats.filter((s) => isPersistedId(s.id)).map((s) => s.id)
+const DB_STATUSES = ['available', 'held', 'blocked', 'unavailable']
+
+/**
+ * Sunucuya yazılacak değerlerin imzası. Sunucu tarafındaki normalizasyonla
+ * (yuvarlama, durum listesi, boş alanlar) aynı olmalı; aksi halde koltuk
+ * gereksiz yere her kayıtta yeniden gönderilir.
+ */
+export function seatSignature(seat: SeatItem): string {
+  const status = seat.status && DB_STATUSES.includes(seat.status) ? seat.status : 'available'
+  return [
+    seat.row,
+    seat.number,
+    Math.round(seat.x),
+    Math.round(seat.y),
+    Math.max(8, Math.round(seat.width)),
+    Math.max(8, Math.round(seat.height)),
+    seat.type || 'NORMAL',
+    status,
+    typeof seat.price === 'number' && Number.isFinite(seat.price) ? seat.price : '',
+    seat.zone ?? '',
+    seat.blockId ?? '',
+    seat.sectionId ?? '',
+    seat.shape === 'rect' ? 'rect' : 'circle',
+    Math.round(seat.rotation ?? 0),
+    seat.svgId ?? '',
+  ].join('|')
+}
+
+/** Kayıtli koltukların id -> imza haritası; yalnız değişenlerin gönderilmesini sağlar. */
+export function seatSyncMap(seats: SeatItem[]): Map<string, string> {
+  const map = new Map<string, string>()
+  for (const seat of seats) {
+    if (isPersistedId(seat.id)) map.set(seat.id, seatSignature(seat))
+  }
+  return map
+}
+
+/** Haritada veritabanından farklı olan (değişmiş veya silinmiş) koltuk var mı? */
+export function hasUnsavedSeats(seats: SeatItem[], synced: Map<string, string>): boolean {
+  for (const seat of seats) {
+    if (synced.get(seat.id) !== seatSignature(seat)) return true
+  }
+  const ids = new Set(seats.map((seat) => seat.id))
+  for (const id of Array.from(synced.keys())) {
+    if (!ids.has(id)) return true
+  }
+  return false
 }

@@ -8,13 +8,13 @@ export default async function AdminEventsPage() {
     prisma.event.findMany({
       where: { status: 'PENDING_APPROVAL' },
     orderBy: { createdAt: 'asc' },
-      include: { organizer: { select: { companyName: true, companyEmail: true } }, hall: { select: { name: true, capacity: true } } },
+      include: { organizer: { select: { companyName: true, companyEmail: true, commissionType: true, commissionValue: true } }, hall: { select: { name: true, capacity: true } } },
     }),
     prisma.event.findMany({
       where: { status: 'PUBLISHED' },
       orderBy: { updatedAt: 'desc' },
       take: 50,
-      include: { organizer: { select: { companyName: true, companyEmail: true } }, hall: { select: { name: true, capacity: true } } },
+      include: { organizer: { select: { companyName: true, companyEmail: true, commissionType: true, commissionValue: true } }, hall: { select: { name: true, capacity: true } } },
     }),
   ])
   return (

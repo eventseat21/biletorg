@@ -38,6 +38,9 @@ export async function POST(request: Request, { params }: { params: { id: string 
     return NextResponse.json({ error: 'Bu etkinlik onaylanabilir durumda değil' }, { status: 409 })
   }
 
+  const publishOrg = Boolean(body.publishOrg ?? true)
+  const publishCom = Boolean(body.publishCom)
+
   await prisma.event.update({
     where: { id: params.id },
     data: {
@@ -46,27 +49,32 @@ export async function POST(request: Request, { params }: { params: { id: string 
       commissionLocked: true,
       commissionSetAt: new Date(),
       commissionSetBy: session.user.id,
-      salesSyncStatus: 'SYNCING',
-      salesSyncError: null,
     },
   })
 
-  let sync
-  try {
-    sync = await syncEventToKurdeventsCom(params.id)
-  } catch (error) {
-    await markEventSyncFailed(params.id, error)
-    return NextResponse.json(
-      { error: 'Etkinlik satış platformuna aktarılamadı', details: error instanceof Error ? error.message : 'Bilinmeyen sync hatası' },
-      { status: 502 },
-    )
+  // Satış platformuna aktarım yalnız admin .com yayınına karar verirse yapılır.
+  let sync: Awaited<ReturnType<typeof syncEventToKurdeventsCom>> | null = null
+  if (publishCom) {
+    await prisma.event.update({
+      where: { id: params.id },
+      data: { salesSyncStatus: 'SYNCING', salesSyncError: null },
+    })
+    try {
+      sync = await syncEventToKurdeventsCom(params.id)
+    } catch (error) {
+      await markEventSyncFailed(params.id, error)
+      return NextResponse.json(
+        { error: 'Etkinlik satış platformuna aktarılamadı', details: error instanceof Error ? error.message : 'Bilinmeyen sync hatası' },
+        { status: 502 },
+      )
+    }
   }
 
   const updated = await prisma.event.update({
     where: { id: params.id },
     data: {
       status: 'PUBLISHED',
-      isPublished: Boolean(body.publishOrg ?? true) || Boolean(body.publishCom ?? true),
+      isPublished: publishOrg,
       publishedAt: new Date(),
     },
     include: { organizer: { select: { companyEmail: true, user: { select: { email: true } } } } },
@@ -74,7 +82,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
   const orgBase = process.env.NEXT_PUBLIC_ORG_SITE_URL || process.env.NEXTAUTH_URL || 'https://kurdevents.org'
   const publicBase = process.env.NEXT_PUBLIC_PUBLIC_SITE_URL || 'https://kurdevents.com'
-  const orgUrl = `${orgBase.replace(/\/$/, '')}/events/${updated.id}`
+  const orgUrl = `${orgBase.replace(/\/$/, '')}/events/${updated.slug}`
   const publicUrl = updated.salesEventId
     ? `${publicBase.replace(/\/$/, '')}/de/etkinlik/${updated.salesEventId}/`
     : null

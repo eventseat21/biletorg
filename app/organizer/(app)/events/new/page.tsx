@@ -25,7 +25,7 @@ export default function NewOrganizerEventPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [halls, setHalls] = useState<{ id: string; name: string; capacity: number }[]>([])
+  const [halls, setHalls] = useState<{ id: string; name: string; _count: { seats: number } }[]>([])
   const [hallId, setHallId] = useState('')
 
   useEffect(() => {
@@ -152,8 +152,28 @@ export default function NewOrganizerEventPage() {
           <label className="label">Salon</label>
           <select className="input w-full" value={hallId} onChange={(e) => setHallId(e.target.value)}>
             <option value="">Salon seçin (sonradan da seçebilirsiniz)</option>
-            {halls.map((hall) => <option key={hall.id} value={hall.id}>{hall.name} · {hall.capacity} koltuk</option>)}
+            {halls.map((hall) => (
+              <option key={hall.id} value={hall.id} disabled={hall._count.seats === 0}>
+                {hall.name} · {hall._count.seats} koltuk
+                {hall._count.seats === 0 ? ' (koltuk planı yok)' : ''}
+              </option>
+            ))}
           </select>
+          {hallId ? (
+            <p className="mt-1 text-xs text-gray-500">
+              Bilet kategorileri, fiyatları ve stokları salon planındaki koltuklardan otomatik oluşturulur; rezerve
+              koltuklar satışa çıkmaz.
+            </p>
+          ) : null}
+          {halls.length === 0 ? (
+            <p className="mt-1 text-xs text-gray-500">
+              Henüz salonunuz yok.{' '}
+              <Link href="/organizer/halls/new" className="font-medium text-indigo-600 hover:text-indigo-800">
+                Salon oluşturup koltuk planı çizin
+              </Link>
+              ; koltuk planı olmayan salona bilet satılmaz.
+            </p>
+          ) : null}
         </div>
         <button type="submit" className="btn-primary w-full rounded-lg py-2" disabled={loading}>
           {loading ? 'Kaydediliyor...' : 'Oluştur'}

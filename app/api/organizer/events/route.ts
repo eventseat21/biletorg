@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { syncTicketCategoriesFromHall, type HallSyncSummary } from '@/lib/sales/categories-from-hall'
 
 export const runtime = 'nodejs'
 
@@ -18,6 +19,31 @@ function slugifyTitle(title: string): string {
     .replace(/ç/g, 'c')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '') || 'etkinlik'
+}
+
+/**
+ * Aynı adlı etkinlikler karışmasın diye tabana sıra numarası eklenir:
+ * ilk kayıt çıplak tabanı alır, sonrakiler 0001, 0002 ... diye devam eder.
+ */
+async function uniqueSlug(base: string): Promise<string> {
+  const taken = await prisma.event.findMany({
+    where: { slug: { startsWith: base } },
+    select: { slug: true },
+  })
+  const names = new Set(taken.map((row) => row.slug))
+  if (!names.has(base)) return base
+
+  let highest = 0
+  for (const { slug } of taken) {
+    const suffix = /^\d+$/.test(slug.slice(base.length)) ? Number(slug.slice(base.length)) : 0
+    if (suffix > highest) highest = suffix
+  }
+  let candidate = `${base}${String(highest + 1).padStart(4, '0')}`
+  while (names.has(candidate)) {
+    highest += 1
+    candidate = `${base}${String(highest).padStart(4, '0')}`
+  }
+  return candidate
 }
 
 export async function GET() {
@@ -88,13 +114,7 @@ export async function POST(request: Request) {
   if (!Number.isFinite(initialQuantity) || initialQuantity < 1) return NextResponse.json({ error: 'Bilet adedi 0’dan büyük olmalı' }, { status: 400 })
 
   const orgId = session.user.organizerId
-  const baseSlug = slugifyTitle(title)
-  let slug = baseSlug
-  for (let attempt = 0; attempt < 50; attempt++) {
-    const existing = await prisma.event.findUnique({ where: { slug } })
-    if (!existing) break
-    slug = `${baseSlug}-${attempt + 1}`
-  }
+  const slug = await uniqueSlug(slugifyTitle(title))
 
   if (body.hallId) {
     const hall = await prisma.hall.findFirst({
@@ -104,6 +124,7 @@ export async function POST(request: Request) {
     if (!hall) return NextResponse.json({ error: 'Salon bulunamadı' }, { status: 400 })
   }
 
+  const withHall = Boolean(body.hallId)
   const event = await prisma.$transaction(async (tx) => {
     const e = await tx.event.create({
       data: {
@@ -129,17 +150,38 @@ export async function POST(request: Request) {
         isPublished: false,
       },
     })
-    await tx.ticketCategory.create({
-      data: {
-        eventId: e.id,
-        name: 'Genel',
-        price: startingPrice,
-        totalQuantity: initialQuantity,
-        availableQuantity: initialQuantity,
-      },
-    })
+    if (!withHall) {
+      await tx.ticketCategory.create({
+        data: {
+          eventId: e.id,
+          name: 'Genel',
+          price: startingPrice,
+          totalQuantity: initialQuantity,
+          availableQuantity: initialQuantity,
+        },
+      })
+    }
     return e
   })
 
-  return NextResponse.json({ event })
+  // Salon seçiliyse satış kategorileri salon planından türetilir; planda
+  // kategori yoksa tek 'Genel' kategorisine dönülür.
+  let hallSynced: HallSyncSummary | null = null
+  if (withHall) {
+    hallSynced = await syncTicketCategoriesFromHall(event.id, body.hallId as string)
+    if (hallSynced.created + hallSynced.updated === 0) {
+      await prisma.ticketCategory.create({
+        data: {
+          eventId: event.id,
+          name: 'Genel',
+          price: startingPrice,
+          totalQuantity: initialQuantity,
+          availableQuantity: initialQuantity,
+        },
+      })
+      hallSynced = null
+    }
+  }
+
+  return NextResponse.json({ event, hallSynced })
 }

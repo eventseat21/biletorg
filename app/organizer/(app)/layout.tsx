@@ -38,9 +38,9 @@ export default async function OrganizerLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <OrganizerSidebar />
-      <main className="flex-1 p-8 overflow-auto">
+    <div className="flex min-h-screen flex-col bg-gray-50 md:flex-row">
+      <OrganizerSidebar organizerId={session.user.organizerId ?? null} />
+      <main className="flex-1 overflow-auto p-4 md:p-8">
         {children}
       </main>
     </div>

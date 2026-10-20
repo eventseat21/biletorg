@@ -2,7 +2,7 @@
 
 export type SeatShape = 'circle' | 'rect'
 
-/** Koltuk çalışma zamanı durumu (veritabanında tutulmaz, anlık gösterim içindir). */
+/** Koltuk satış durumu; 'held'/'unavailable' salon planında kalıcı olarak tutulur. */
 export type SeatStatus = 'available' | 'selected' | 'held' | 'blocked' | 'unavailable'
 
 /** Tek bir koltuk. x,y = kutunun SOL-ÜST köşesi. */
@@ -18,6 +18,10 @@ export interface SeatItem {
   type: string
   shape: SeatShape
   rotation: number
+  /** Kategoriden türetilen bilet fiyatı (euro). */
+  price?: number | null
+  /** .com tarafındaki bölüm (section) adı; kategori etiketiyle eşleşir. */
+  sectionId?: string | null
   /** Bölge (zone) kimliği. */
   zone?: string | null
   /** Aynı anda seçilip taşınacak blok kimliği. */
@@ -78,7 +82,19 @@ export interface WorldPoint {
 }
 
 /** Editör araç modu. */
-export type EditorTool = 'select' | 'add' | 'erase' | 'paint' | 'pan' | 'row' | 'arc'
+export type EditorTool = 'select' | 'add' | 'erase' | 'paint' | 'reserve' | 'pan' | 'row' | 'arc'
+
+/** Rezerve aracıyla koltuğa verilecek durum. */
+export type StatusBrush = 'held' | 'unavailable' | 'available'
+
+/** Editörün salonla birlikte `layoutJson` alanında sakladığı düzen belgesi. */
+export interface SeatLayoutDocument {
+  categories?: CategoryDef[]
+  zones?: ZoneDef[]
+  background?: ChartBackground
+  stage?: StageSize
+  stagePosition?: WorldPoint
+}
 
 /** Yay/daire sıra üretici formu. */
 export interface ArcForm {

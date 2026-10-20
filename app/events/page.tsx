@@ -97,7 +97,7 @@ export default async function EventsPage() {
                     </div>
                     <div className="text-primary-600 font-semibold">
                       {event.ticketCategories[0] ? (
-                        `Başlangıç: ${event.ticketCategories[0].price.toLocaleString('tr-TR')} ₺`
+                        `Başlangıç: €${event.ticketCategories[0].price.toFixed(2)}`
                       ) : (
                         'Biletler yakında'
                       )}

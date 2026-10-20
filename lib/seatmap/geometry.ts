@@ -32,36 +32,6 @@ export function computeBounds(seats: SeatItem[]): Bounds | null {
   return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY }
 }
 
-/** Ekran noktasına denk gelen koltuğu bulur (en üstteki kazanır). */
-export function seatHitTest(seats: SeatItem[], point: WorldPoint, slop = 3): SeatItem | null {
-  for (let i = seats.length - 1; i >= 0; i--) {
-    const s = seats[i]
-    if (
-      point.x >= s.x - slop &&
-      point.x <= s.x + s.width + slop &&
-      point.y >= s.y - slop &&
-      point.y <= s.y + s.height + slop
-    ) {
-      return s
-    }
-  }
-  return null
-}
-
-/** Verilen dikdörtgenle kesişen tüm koltukları döndürür (çerçeve seçimi için). */
-export function seatsInRect(
-  seats: SeatItem[],
-  rect: { x: number; y: number; width: number; height: number }
-): SeatItem[] {
-  const left = Math.min(rect.x, rect.x + rect.width)
-  const right = Math.max(rect.x, rect.x + rect.width)
-  const top = Math.min(rect.y, rect.y + rect.height)
-  const bottom = Math.max(rect.y, rect.y + rect.height)
-  return seats.filter(
-    (s) => s.x < right && s.x + s.width > left && s.y < bottom && s.y + s.height > top
-  )
-}
-
 let idCounter = 0
 
 /** Henüz veritabanında olmayan yeni bir koltuk için geçici kimlik. */
@@ -124,6 +94,31 @@ export interface RowGeneratorOptions {
   numberDirection?: 'ltr' | 'rtl'
   /** 0 = düz satır. Pozitif değer satırı yukarı doğru yaylar. */
   curve?: number
+  /**
+   * Satır bazında toplam koltuk sayısı (ör. [28, 26, 24]).
+   * Verilirse `rows` ve `seatsPerRow` yerine geçer; blok düzeni bu adede oranla paylaştırılır.
+   */
+  rowSeatCounts?: number[]
+}
+
+/** Satır toplamını blok deseninin oranlarına göre tam sayılara böler (büyük parça yöntemi). */
+function distributeToBlocks(total: number, pattern: number[]): number[] {
+  const patternTotal = pattern.reduce((sum, count) => sum + count, 0)
+  if (total <= 0 || patternTotal <= 0) return pattern.map(() => 0)
+  const shares = pattern.map((count) => (count / patternTotal) * total)
+  const parts = shares.map(Math.floor)
+  let rest = total - parts.reduce((sum, count) => sum + count, 0)
+  const order = shares
+    .map((share, index) => ({ index, frac: share - Math.floor(share) }))
+    .sort((a, b) => b.frac - a.frac)
+  while (rest > 0 && order.length > 0) {
+    for (const { index } of order) {
+      if (rest <= 0) break
+      parts[index] += 1
+      rest -= 1
+    }
+  }
+  return parts
 }
 
 /**
@@ -149,6 +144,7 @@ export function generateRows(opts: RowGeneratorOptions): SeatItem[] {
     numbering = 'sequential',
     numberDirection = 'ltr',
     curve = 0,
+    rowSeatCounts,
   } = opts
 
   const seats: SeatItem[] = []
@@ -156,15 +152,36 @@ export function generateRows(opts: RowGeneratorOptions): SeatItem[] {
   const pitchY = seatHeight + gapY
   const validBlocks = blocks?.filter((count) => Number.isFinite(count) && count > 0).map(Math.floor)
   const hasBlocks = Boolean(validBlocks && validBlocks.length > 0)
-  const totalSeats = hasBlocks
-    ? (validBlocks as number[]).reduce((sum, count) => sum + count, 0)
-    : seatsPerRow
+  const perRow =
+    rowSeatCounts && rowSeatCounts.length > 0
+      ? rowSeatCounts.map((count) => Math.max(0, Math.floor(count)))
+      : null
+  const totalRows = perRow ? perRow.length : rows
 
-  for (let r = 0; r < rows; r++) {
+  const rowBlockSets: number[][] = Array.from({ length: totalRows }, (_, r) =>
+    perRow
+      ? hasBlocks
+        ? distributeToBlocks(perRow[r], validBlocks as number[])
+        : [perRow[r]]
+      : hasBlocks
+        ? (validBlocks as number[])
+        : [seatsPerRow],
+  )
+  // Dar satırlar en geniş satıra göre ortalanır; salonlar geriye doğru daralırken simetrik kalır.
+  const rowWidths = rowBlockSets.map(
+    (blocks) =>
+      blocks.reduce((width, count) => width + count * pitchX, 0) +
+      Math.max(0, blocks.length - 1) * blockGap,
+  )
+  const maxWidth = Math.max(0, ...rowWidths)
+
+  for (let r = 0; r < totalRows; r++) {
     const rowName = rowLabel(startRowIndex + r)
     let seatIndex = 0
-    let blockStartX = originX
-    const rowBlocks = hasBlocks ? (validBlocks as number[]) : [seatsPerRow]
+    let blockStartX = originX + (maxWidth - rowWidths[r]) / 2
+    const rowBlocks = rowBlockSets[r]
+    const totalSeats = rowBlocks.reduce((sum, count) => sum + count, 0)
+    if (totalSeats <= 0) continue
 
     for (let b = 0; b < rowBlocks.length; b++) {
       const count = rowBlocks[b]

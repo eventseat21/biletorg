@@ -6,21 +6,27 @@ type ApprovalEvent = {
   id: string
   slug: string
   title: string
-  organizer: { companyName: string; companyEmail: string }
+  organizer: { companyName: string; companyEmail: string; commissionType: string | null; commissionValue: number | null }
   hall: { name: string; capacity: number } | null
   startDate: string
   commissionType: string
   commissionValue: number
+  commissionLocked?: boolean
+  publishComRequested?: boolean
   status?: string
   salesSyncStatus?: string | null
   salesSyncError?: string | null
 }
 
 export default function EventApprovalCard({ event }: { event: ApprovalEvent }) {
-  const [type, setType] = useState<'PERCENT_DEDUCT' | 'FIXED_ADD'>(event.commissionType === 'FIXED_ADD' ? 'FIXED_ADD' : 'PERCENT_DEDUCT')
-  const [value, setValue] = useState(String(event.commissionValue ?? 0))
+  // Etkinlik için henüz anlaşma kilitlenmediyse organizatörün varsayılanı önerilir.
+  const useOrganizerDefault = !event.commissionLocked && !event.commissionValue && event.organizer.commissionValue !== null
+  const suggestedType = useOrganizerDefault ? event.organizer.commissionType : event.commissionType
+  const suggestedValue = useOrganizerDefault ? event.organizer.commissionValue : event.commissionValue
+  const [type, setType] = useState<'PERCENT_DEDUCT' | 'FIXED_ADD'>(suggestedType === 'FIXED_ADD' ? 'FIXED_ADD' : 'PERCENT_DEDUCT')
+  const [value, setValue] = useState(String(suggestedValue ?? 0))
   const [publishOrg, setPublishOrg] = useState(true)
-  const [publishCom, setPublishCom] = useState(true)
+  const [publishCom, setPublishCom] = useState(Boolean(event.publishComRequested))
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<{ publicUrl: string | null; orgUrl: string; embedCode: string | null } | null>(null)
   const [message, setMessage] = useState('')
@@ -66,6 +72,12 @@ export default function EventApprovalCard({ event }: { event: ApprovalEvent }) {
         <h3 className="text-lg font-semibold text-gray-900">{event.title}</h3>
         <p className="text-sm text-gray-600">{event.organizer.companyName} · {event.organizer.companyEmail}</p>
         <p className="text-sm text-gray-600">{new Date(event.startDate).toLocaleString('tr-TR')} · Salon: {event.hall?.name || 'Seçilmemiş'}</p>
+        {event.publishComRequested && event.status !== 'PUBLISHED' ? (
+          <p className="mt-1 inline-block w-fit rounded bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800">Organizatör kurdevents.com yayını talep etti</p>
+        ) : null}
+        {useOrganizerDefault ? (
+          <p className="text-xs text-gray-500">Organizatör anlaşması: {event.organizer.commissionType === 'FIXED_ADD' ? `bilet başına €${Number(event.organizer.commissionValue).toFixed(2)}` : `%${event.organizer.commissionValue}`} — değer değiştirilebilir.</p>
+        ) : null}
       </div>
       {event.salesSyncStatus ? <p className={`rounded border p-3 text-sm ${event.salesSyncStatus === 'FAILED' ? 'border-red-200 bg-red-50 text-red-800' : 'border-slate-200 bg-slate-50 text-slate-700'}`}><strong>Satış platformu aktarımı:</strong> {event.salesSyncStatus}{event.salesSyncError ? ` — ${event.salesSyncError}` : ''}</p> : null}
       {event.status === 'PUBLISHED' ? (
@@ -76,7 +88,7 @@ export default function EventApprovalCard({ event }: { event: ApprovalEvent }) {
             <label className="text-sm text-blue-950">Komisyon yöntemi<select value={type} onChange={(e) => setType(e.target.value as typeof type)} className="input mt-1 w-full bg-white"><option value="PERCENT_DEDUCT">Organizatörden yüzde kes</option><option value="FIXED_ADD">Bilet fiyatına sabit ücret ekle</option></select></label>
             <label className="text-sm text-blue-950">{type === 'FIXED_ADD' ? 'Bilet başına ek ücret (€)' : 'Komisyon oranı (%)'}<input value={value} onChange={(e) => setValue(e.target.value)} inputMode="decimal" className="input mt-1 w-full bg-white" /></label>
           </div>
-          <div className="flex flex-wrap gap-4 text-sm"><label className="flex items-center gap-2"><input type="checkbox" checked={publishOrg} onChange={(e) => setPublishOrg(e.target.checked)} /> kurdevents.org’da yayınla</label><label className="flex items-center gap-2"><input type="checkbox" checked={publishCom} onChange={(e) => setPublishCom(e.target.checked)} /> kurdevents.com’da yayınla</label></div>
+          <div className="flex flex-wrap gap-4 text-sm"><label className="flex items-center gap-2"><input type="checkbox" checked={publishOrg} onChange={(e) => setPublishOrg(e.target.checked)} /> kurdevents.org’da yayınla</label><label className="flex items-center gap-2"><input type="checkbox" checked={publishCom} onChange={(e) => setPublishCom(e.target.checked)} /> kurdevents.com’da yayınla{event.publishComRequested ? ' (talep edildi)' : ' (organizatör talep etmedi)'}</label></div>
           <button type="button" onClick={approve} disabled={busy || (!publishOrg && !publishCom)} className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50">{busy ? 'Onaylanıyor…' : 'Onayla ve yayınla'}</button>
         </>
       )}

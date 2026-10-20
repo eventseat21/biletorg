@@ -27,15 +27,15 @@ export function DeleteHallButton({ hallId, hallName }: DeleteHallButtonProps) {
         body: JSON.stringify({ hallId }),
       })
 
+      const data = await response.json().catch(() => null)
       if (!response.ok) {
-        throw new Error('Salon silinemedi')
+        throw new Error(data?.error || 'Salon silinemedi')
       }
 
       // Sayfayı yenile
       window.location.reload()
     } catch (error) {
-      console.error('Error deleting hall:', error)
-      alert('Salon silinirken bir hata oluştu')
+      alert(error instanceof Error ? error.message : 'Salon silinirken bir hata oluştu')
       setIsDeleting(false)
     }
   }

@@ -52,6 +52,7 @@ export interface PropertiesPanelProps {
   onUpdateCategory: (key: string, patch: Partial<CategoryDef>) => void
   onAddCategory: () => void
   onRemoveCategory: (key: string) => void
+  onPruneUnusedCategories: () => void
   categoryCounts: Record<string, number>
   // Arka plan
   background: ChartBackground
@@ -410,8 +411,10 @@ function CategoriesTab({
   onUpdateCategory,
   onAddCategory,
   onRemoveCategory,
+  onPruneUnusedCategories,
   categoryCounts,
 }: PropertiesPanelProps) {
+  const unused = categories.filter((c) => (categoryCounts[c.key] ?? 0) === 0).length
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -430,7 +433,8 @@ function CategoriesTab({
         {categories.map((c) => (
           <div
             key={c.key}
-            className={`rounded-lg border p-2.5 transition ${
+            onClick={() => onCategoryChange(c.key)}
+            className={`cursor-pointer rounded-lg border p-2.5 transition ${
               activeCategory === c.key
                 ? 'border-indigo-400 bg-indigo-50'
                 : 'border-slate-200 bg-white'
@@ -465,7 +469,10 @@ function CategoriesTab({
               {categories.length > 1 ? (
                 <button
                   type="button"
-                  onClick={() => onRemoveCategory(c.key)}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onRemoveCategory(c.key)
+                  }}
                   className="shrink-0 text-slate-400 hover:text-red-600"
                   aria-label="Kategoriyi sil"
                 >
@@ -477,8 +484,19 @@ function CategoriesTab({
         ))}
       </div>
 
+      {unused > 0 ? (
+        <button
+          type="button"
+          onClick={onPruneUnusedCategories}
+          className="w-full rounded-md border border-slate-300 bg-slate-50 px-2 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-100"
+        >
+          Kullanılmayan {unused} kategoriyi kaldır
+        </button>
+      ) : null}
+
       <p className="text-[11px] leading-relaxed text-slate-500">
-        Aktif kategoriyi seçtikten sonra <strong>Boya</strong> aracıyla koltuklara uygula.
+        Aktif kategori için kartına tıkla; sonra <strong>Boya</strong> aracıyla veya seçim üstündeki
+        düğmeyle koltuklara uygula.
       </p>
     </div>
   )

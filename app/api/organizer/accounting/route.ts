@@ -2,95 +2,86 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { periodStart, readPeriod } from '@/lib/accounting/format'
 
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+type EventRow = { id: string; title: string; orders: number; tickets: number; total: number; fee: number; net: number }
+type BucketRow = { bucket: string; total: number; net: number }
+
+/** Organizatörün ödenmiş siparişlerinin defteri: etkinlik bazında brüt / komisyon / net. */
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions)
-  
-  if (!session?.user?.organizerId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  if (!session?.user?.organizerId) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 })
 
   const { searchParams } = new URL(request.url)
-  const period = searchParams.get('period') || 'month'
-
+  const period = readPeriod(searchParams.get('period'))
   const organizerId = session.user.organizerId
-  const commissionRate = parseInt(process.env.PLATFORM_COMMISSION_PERCENTAGE || '5')
+  const from = periodStart(period)
+  const granularity = period === 'all' || period === 'year' ? 'month' : 'day'
 
-  // Calculate date range
-  const now = new Date()
-  const startDate = new Date()
-  if (period === 'week') {
-    startDate.setDate(now.getDate() - 7)
-  } else if (period === 'month') {
-    startDate.setDate(now.getDate() - 30)
-  } else {
-    startDate.setFullYear(now.getFullYear() - 1)
-  }
+  const [organizer, eventRows, buckets] = await Promise.all([
+    prisma.organizer.findUnique({
+      where: { id: organizerId },
+      select: { commissionType: true, commissionValue: true },
+    }),
+    prisma.$queryRaw<EventRow[]>`
+      SELECT e."id", e."title",
+             COUNT(o."id")::int AS orders,
+             COALESCE(SUM(o."ticketCount"), 0)::int AS tickets,
+             COALESCE(SUM(o."totalAmount"), 0)::float AS total,
+             COALESCE(SUM(o."platformFee"), 0)::float AS fee,
+             COALESCE(SUM(o."organizerAmount"), 0)::float AS net
+      FROM "events" e
+      LEFT JOIN LATERAL (
+        SELECT ord."id", ord."totalAmount", ord."platformFee", ord."organizerAmount",
+               (SELECT COUNT(*)::int FROM "tickets" t WHERE t."orderId" = ord."id") AS "ticketCount"
+        FROM "orders" ord
+        WHERE ord."eventId" = e."id"
+          AND ord."paymentStatus" = 'PAID'
+          AND (${from}::timestamptz IS NULL OR ord."createdAt" >= ${from})
+      ) o ON TRUE
+      WHERE e."organizerId" = ${organizerId}
+      GROUP BY e."id", e."title"
+      HAVING COUNT(o."id") > 0
+      ORDER BY total DESC
+    `,
+    prisma.$queryRaw<BucketRow[]>`
+      SELECT to_char(date_trunc(${granularity}, ord."createdAt"), 'YYYY-MM-DD') AS bucket,
+             COALESCE(SUM(ord."totalAmount"), 0)::float AS total,
+             COALESCE(SUM(ord."organizerAmount"), 0)::float AS net
+      FROM "orders" ord
+      JOIN "events" e ON e."id" = ord."eventId"
+      WHERE e."organizerId" = ${organizerId}
+        AND ord."paymentStatus" = 'PAID'
+        AND (${from}::timestamptz IS NULL OR ord."createdAt" >= ${from})
+      GROUP BY bucket
+      ORDER BY bucket ASC
+    `,
+  ])
 
-  // Get all completed orders for this organizer
-  const orders = await prisma.order.findMany({
-    where: {
-      event: { organizerId },
-      paymentStatus: 'COMPLETED',
-      createdAt: { gte: startDate }
-    },
-    include: { event: true }
-  })
-
-  // Calculate totals
-  const totalRevenue = orders.reduce((sum, o) => sum + Number(o.totalAmount), 0)
-  const totalCommission = orders.reduce((sum, o) => sum + Number(o.platformFee), 0)
-  const netRevenue = totalRevenue - totalCommission
-  const totalSales = orders.length
-
-  // Revenue by date for chart
-  const revenueByDate: Record<string, number> = {}
-  orders.forEach(order => {
-    const date = order.createdAt.toISOString().split('T')[0]
-    revenueByDate[date] = (revenueByDate[date] || 0) + Number(order.totalAmount)
-  })
-
-  // Revenue by event
-  const eventRevenueMap: Record<string, {
-    id: string
-    title: string
-    sales: number
-    total: number
-    commission: number
-    net: number
-  }> = {}
-
-  orders.forEach(order => {
-    const eventId = order.event.id
-    if (!eventRevenueMap[eventId]) {
-      eventRevenueMap[eventId] = {
-        id: eventId,
-        title: order.event.title,
-        sales: 0,
-        total: 0,
-        commission: 0,
-        net: 0
-      }
-    }
-    eventRevenueMap[eventId].sales += 1
-    eventRevenueMap[eventId].total += Number(order.totalAmount)
-    eventRevenueMap[eventId].commission += Number(order.platformFee)
-    eventRevenueMap[eventId].net += Number(order.organizerAmount)
-  })
-
-  const sortedDates = Object.keys(revenueByDate).sort()
-  const revenueByDateArray = sortedDates.map(date => ({
-    date: new Date(date).toLocaleDateString('tr-TR'),
-    revenue: revenueByDate[date]
-  }))
+  const totals = eventRows.reduce(
+    (sum, row) => ({
+      total: sum.total + row.total,
+      fee: sum.fee + row.fee,
+      net: sum.net + row.net,
+      orders: sum.orders + row.orders,
+      tickets: sum.tickets + row.tickets,
+    }),
+    { total: 0, fee: 0, net: 0, orders: 0, tickets: 0 },
+  )
 
   return NextResponse.json({
-    totalRevenue,
-    totalCommission,
-    netRevenue,
-    totalSales,
-    commissionRate,
-    revenueByDate: revenueByDateArray,
-    eventRevenue: Object.values(eventRevenueMap).sort((a, b) => b.net - a.net)
+    period,
+    commissionType: organizer?.commissionType ?? null,
+    commissionValue: organizer?.commissionValue ?? null,
+    ...totals,
+    eventRevenue: eventRows,
+    revenueByDate: buckets.map((bucket) => ({
+      date: new Date(`${bucket.bucket}T00:00:00`).toLocaleDateString('tr-TR'),
+      revenue: bucket.total,
+      net: bucket.net,
+    })),
   })
 }

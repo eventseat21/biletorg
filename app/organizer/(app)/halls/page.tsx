@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import Link from 'next/link'
-import { Plus, MapPin, Users, ArrowRight, Wand2, Trash2 } from 'lucide-react'
+import { Plus, MapPin, Users, ArrowRight, Armchair } from 'lucide-react'
 import { DeleteHallButton } from './delete-hall-button'
 
 async function getHalls(organizerId: string) {
@@ -32,10 +32,6 @@ export default async function HallsPage() {
           <p className="text-gray-600 mt-1">Etkinlikleriniz için salon tasarımları</p>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/organizer/halls/wizard" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100">
-            <Wand2 size={18} />
-            Salon Planı Wizard
-          </Link>
           <Link href="/organizer/halls/new" className="btn-primary inline-flex items-center gap-2">
             <Plus size={20} />
             Yeni Salon
@@ -78,18 +74,28 @@ export default async function HallsPage() {
                 </div>
 
                 <div className="flex items-center justify-between gap-2">
-                  <Link 
-                    href={`/organizer/halls/${hall.id}`}
-                    className="text-primary-600 hover:text-primary-700 font-medium text-sm inline-flex items-center gap-1"
+                  <Link
+                    href={`/organizer/halls/${hall.id}/seatmap`}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-700"
                   >
-                    Düzenle
-                    <ArrowRight size={16} />
+                    <Armchair size={16} />
+                    Koltuk planı
                   </Link>
-                  
-                  <DeleteHallButton 
-                    hallId={hall.id} 
-                    hallName={hall.name} 
-                  />
+
+                  <span className="flex items-center gap-3">
+                    <Link
+                      href={`/organizer/halls/${hall.id}`}
+                      className="text-indigo-600 hover:text-indigo-800 text-sm font-medium inline-flex items-center gap-1"
+                    >
+                      Bilgi
+                      <ArrowRight size={16} />
+                    </Link>
+
+                    <DeleteHallButton
+                      hallId={hall.id}
+                      hallName={hall.name}
+                    />
+                  </span>
                 </div>
               </div>
             </div>

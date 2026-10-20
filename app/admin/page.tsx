@@ -17,7 +17,7 @@ async function getAdminStats() {
     const pendingApprovals = pendingOrgs + pendingCheckers
 
     const revenue = await prisma.order.aggregate({
-      where: { paymentStatus: 'COMPLETED' },
+      where: { paymentStatus: 'PAID' },
       _sum: { totalAmount: true }
     })
 
@@ -94,7 +94,7 @@ export default async function AdminDashboard() {
         <div className="card p-6">
           <h3 className="text-sm font-medium text-gray-500">Toplam Gelir</h3>
           <p className="text-3xl font-bold text-gray-900 mt-2">
-            {stats.totalRevenue.toLocaleString('tr-TR')} ₺
+            €{stats.totalRevenue.toFixed(2)}
           </p>
         </div>
         <div className="card p-6 border-2 border-yellow-200">

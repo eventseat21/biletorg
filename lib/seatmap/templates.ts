@@ -51,7 +51,7 @@ export const VENUE_TEMPLATES: VenueTemplate[] = [
         seatWidth: 26,
         seatHeight: 26,
         shape: 'circle',
-        type: 'NORMAL',
+        type: 'CATEGORY_1',
         originX: -mainWidth / 2,
         originY: -330,
         startRowIndex: 16,
@@ -65,7 +65,7 @@ export const VENUE_TEMPLATES: VenueTemplate[] = [
         seatWidth: 26,
         seatHeight: 26,
         shape: 'circle',
-        type: 'NORMAL',
+        type: 'CATEGORY_1',
         originX: -mainWidth / 2,
         originY: -650,
         startRowIndex: 26,
@@ -143,7 +143,7 @@ export const VENUE_TEMPLATES: VenueTemplate[] = [
         seatWidth: 26,
         seatHeight: 26,
         shape: 'circle',
-        type: 'NORMAL',
+        type: 'CATEGORY_1',
         startRowIndex: 8,
       })
       return [
@@ -184,7 +184,7 @@ export const VENUE_TEMPLATES: VenueTemplate[] = [
         seatWidth: 24,
         seatHeight: 24,
         shape: 'circle',
-        type: 'NORMAL',
+        type: 'CATEGORY_1',
         startRowIndex: 10,
       })
       return [
@@ -208,7 +208,7 @@ export const VENUE_TEMPLATES: VenueTemplate[] = [
         seatWidth: 26,
         seatHeight: 26,
         shape: 'circle',
-        type: 'NORMAL',
+        type: 'CATEGORY_1',
         originX: -w / 2,
         originY: -40,
         startRowIndex: 0,
@@ -269,7 +269,7 @@ export const VENUE_TEMPLATES: VenueTemplate[] = [
               seatWidth: 26,
               seatHeight: 26,
               shape: 'circle',
-              type: tableNo === 5 ? 'VIP' : 'NORMAL',
+              type: tableNo === 5 ? 'VIP' : 'CATEGORY_1',
               rowName: `T${tableNo}`,
               startNumber: 1,
             }), `template-gala-table-${tableNo}`)

@@ -10,6 +10,7 @@ import {
   type ChangeEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
+import Link from 'next/link'
 import type {
   ArcForm,
   CategoryDef,
@@ -17,22 +18,32 @@ import type {
   ChartDoc,
   EditorTool,
   SeatItem,
+  SeatLayoutDocument,
+  StatusBrush,
   WorldPoint,
   ZoneDef,
 } from '@/lib/seatmap/types'
-import { DEFAULT_CATEGORIES, nextCategoryKey } from '@/lib/seatmap/categories'
+import { DEFAULT_CATEGORIES, applyCategory, buildCategoryMap, ensureSeatCategories, nextCategoryKey } from '@/lib/seatmap/categories'
 import {
   centerOfSeats,
   generateArcRows,
   generateRows,
+  isPersistedId,
   makeSeatId,
   nextRowLabel,
   rotateSeatsAround,
   rowLabel,
-  seatsInRect,
   snapToGrid,
 } from '@/lib/seatmap/geometry'
-import { persistedIds, seatFromApi, seatToPayload, type ApiSeat } from '@/lib/seatmap/adapter'
+import { buildSeatIndex, indexRectHits } from '@/lib/seatmap/spatial'
+import {
+  hasUnsavedSeats,
+  seatFromApi,
+  seatSignature,
+  seatSyncMap,
+  seatToPayload,
+  type ApiSeat,
+} from '@/lib/seatmap/adapter'
 import { getTemplate } from '@/lib/seatmap/templates'
 import SeatMapCanvas from './SeatMapCanvas'
 import EditorToolbar from './EditorToolbar'
@@ -58,6 +69,8 @@ interface RowForm {
   curve: number
   /** Örnek: 4,4,5,2 — koridorlarla ayrılmış bloklar. */
   blockPattern: string
+  /** Örnek: 28,26,24 — satır bazında toplam koltuk; doluysa "Satır" ve "Koltuk/satır" yerine geçer. */
+  perRowPattern: string
   blockGap: number
   numbering: 'sequential' | 'odd' | 'even' | 'split'
   numberDirection: 'ltr' | 'rtl'
@@ -74,6 +87,7 @@ const DEFAULT_ROW_FORM: RowForm = {
   shape: 'circle',
   curve: 0,
   blockPattern: '',
+  perRowPattern: '',
   blockGap: 34,
   numbering: 'sequential',
   numberDirection: 'ltr',
@@ -94,26 +108,26 @@ const DEFAULT_ARC_FORM: ArcForm = {
 
 const DEFAULT_BACKGROUND: ChartBackground = { image: null, opacity: 0.35, fit: 'contain' }
 
-/** Yeni kategori eklerken kullanılacak renkler. */
-const ADD_COLORS = ['#64748b', '#0ea5e9', '#22c55e', '#eab308', '#f97316', '#ec4899', '#8b5cf6']
-
-/** Koltuk -> bölge eşlemesinin anahtarı (satır + numara). */
-function seatKey(seat: Pick<SeatItem, 'row' | 'number'>): string {
-  return `${seat.row}::${seat.number}`
+/** Rezerve aracının koltuğa vereceği durumun arayüz adı. */
+const STATUS_BRUSH_LABEL: Record<StatusBrush, string> = {
+  held: 'Tutuldu',
+  unavailable: 'Bloklu',
+  available: 'Satışa açık',
 }
+
+/** Yeni kategori eklerken kullanılacak renkler. */
+const ADD_COLORS = ['#7c3aed', '#0284c7', '#db2777', '#65a30d', '#f59e0b', '#dc2626', '#4f46e5', '#0891b2']
+
+/** Son düzenlemeden kaç ms sonra otomatik kayıt tetiklenir. */
+const AUTOSAVE_DELAY_MS = 4000
 
 function makeBlockId(): string {
   return `block-${Date.now().toString(36)}-${Math.floor(Math.random() * 10000)}`
 }
 
-interface StoredMeta {
-  categories?: CategoryDef[]
-  zones?: ZoneDef[]
-  background?: ChartBackground
-  seatZones?: Record<string, string>
-  blockIds?: Record<string, string>
-  stage?: { width: number; height: number }
-  stagePosition?: WorldPoint
+/** Geri/ileri al listesi sınırlı tutulur; 10.000 koltukta kopyalar belleği şişirir. */
+function pushBounded<T>(list: T[], item: T, limit: number): T[] {
+  return [...(list.length >= limit ? list.slice(list.length - limit + 1) : list), item]
 }
 
 export default function SeatMapEditor({
@@ -129,7 +143,8 @@ export default function SeatMapEditor({
   }))
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [tool, setTool] = useState<EditorTool>('select')
-  const [activeCategory, setActiveCategory] = useState('NORMAL')
+  const [activeCategory, setActiveCategory] = useState('CATEGORY_1')
+  const [statusBrush, setStatusBrush] = useState<StatusBrush>('held')
   const [showLabels, setShowLabels] = useState(true)
   const [rowForm, setRowForm] = useState<RowForm>(DEFAULT_ROW_FORM)
   const [showAdvancedRows, setShowAdvancedRows] = useState(true)
@@ -138,7 +153,6 @@ export default function SeatMapEditor({
   const [categories, setCategories] = useState<CategoryDef[]>(DEFAULT_CATEGORIES)
   const [zones, setZones] = useState<ZoneDef[]>([])
   const [activeZoneId, setActiveZoneId] = useState<string | null>(null)
-  const [seatZones, setSeatZones] = useState<Record<string, string>>({})
   const [background, setBackground] = useState<ChartBackground>(DEFAULT_BACKGROUND)
   const [arcForm, setArcForm] = useState<ArcForm>(DEFAULT_ARC_FORM)
   const [arcCenter, setArcCenter] = useState<WorldPoint | null>(null)
@@ -151,7 +165,6 @@ export default function SeatMapEditor({
     label: string
     overlaps: number
   } | null>(null)
-  const [metaReady, setMetaReady] = useState(!hallId)
 
   const [past, setPast] = useState<SeatItem[][]>([])
   const [future, setFuture] = useState<SeatItem[][]>([])
@@ -159,6 +172,11 @@ export default function SeatMapEditor({
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(Boolean(hallId))
   const [message, setMessage] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [reloadKey, setReloadKey] = useState(0)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [autosave, setAutosave] = useState(true)
+  const [savedAt, setSavedAt] = useState<number | null>(null)
   const [marquee, setMarquee] = useState<{
     x: number
     y: number
@@ -166,129 +184,118 @@ export default function SeatMapEditor({
     height: number
   } | null>(null)
 
-  const persistedRef = useRef<Set<string>>(new Set(persistedIds(initialSeats ?? [])))
+  /** Kayıtli koltukların id -> imza haritası; değişeni ve silineni bulur. */
+  const syncedRef = useRef<Map<string, string>>(new Map(seatSyncMap(initialSeats ?? [])))
   const dragRef = useRef<{
     startWorld: WorldPoint
     snapshot: SeatItem[]
     ids: Set<string>
     moved: boolean
   } | null>(null)
-  const marqueeRef = useRef<{ startWorld: WorldPoint; additive: boolean } | null>(null)
+  const marqueeRef = useRef<{
+    startWorld: WorldPoint
+    additive: boolean
+    mode: 'select' | 'paint' | 'reserve' | 'erase'
+  } | null>(null)
   const jsonInputRef = useRef<HTMLInputElement | null>(null)
 
-  // ---- Veri yükleme (koltuklar + yerel meta) ------------------------------
-  useEffect(() => {
-    if (!hallId) {
-      setMetaReady(true)
-      return
-    }
-    let cancelled = false
+  /** Kayıt bittiğinde hâlâ kaydedilmemiş bir şey var mı diye güncel durumu tutar. */
+  const stateRef = useRef({ seats, categories, zones, background, stage, stagePosition })
+  stateRef.current = { seats, categories, zones, background, stage, stagePosition }
+  /** Son başarılı kayıtta veritabanına yazılan düzen belgesinin metni. */
+  const savedLayoutRef = useRef<string>('')
+  /** Kayıtta alınan geçici id -> gerçek id eşlemesi; geri alınan anlık görüntüler de çevrilir. */
+  const aliasRef = useRef<Map<string, string>>(new Map())
+  const saveRef = useRef<((options?: { automatic?: boolean }) => Promise<void>) | null>(null)
+  /** Eşzamanlı kayıt denemelerini engeller (elle + otomatik). */
+  const savingRef = useRef(false)
 
-    // Yerel meta (kategori/bölge/arka plan) — sayfa yenilense de kalsın.
-    let storedSeatZones: Record<string, string> = {}
-    let storedBlockIds: Record<string, string> = {}
-    try {
-      const raw = window.localStorage.getItem(`seatmap-meta:${hallId}`)
-      if (raw) {
-        const meta = JSON.parse(raw) as StoredMeta
-        if (Array.isArray(meta.categories) && meta.categories.length > 0) {
-          setCategories(meta.categories)
-        }
-        if (Array.isArray(meta.zones)) {
-          setZones(meta.zones)
-          if (meta.zones.length > 0) setActiveZoneId(meta.zones[0].id)
-        }
-        if (meta.background) setBackground(meta.background)
-        if (meta.seatZones && typeof meta.seatZones === 'object') {
-          storedSeatZones = meta.seatZones
-          setSeatZones(meta.seatZones)
-        }
-        if (meta.blockIds && typeof meta.blockIds === 'object') {
-          storedBlockIds = meta.blockIds
-        }
+  const categoryMap = useMemo(() => buildCategoryMap(categories), [categories])
+
+  /** Yerleştirme/çakışma/çerçeve sorgularının koltuk listesini taramaması için. */
+  const seatIndex = useMemo(() => buildSeatIndex(seats), [seats])
+
+  const countOverlapsWith = (candidates: SeatItem[]): number => {
+    if (seatIndex.seats.length === 0) return 0
+    let overlaps = 0
+    for (let i = 0; i < candidates.length; i++) {
+      const c = candidates[i]
+      if (
+        indexRectHits(seatIndex, {
+          x: c.x,
+          y: c.y,
+          width: c.width,
+          height: c.height,
+        }).length > 0
+      ) {
+        overlaps++
       }
-    } catch {
-      /* bozuk meta görmezden gelinir */
     }
+    return overlaps
+  }
+
+  // ---- Veri yükleme (koltuklar + salon düzeni) ----------------------------
+  useEffect(() => {
+    if (!hallId) return
+    let cancelled = false
+    setLoading(true)
+    setLoadError(null)
 
     const load = async () => {
       try {
         const res = await fetch(`/api/organizer/halls/${hallId}`)
-        if (!res.ok) throw new Error('Salon yüklenemedi')
+        if (!res.ok) throw new Error(res.status === 401 ? 'Oturum düşmüş, tekrar giriş yapın.' : 'Salon yüklenemedi')
         const data = await res.json()
         if (cancelled) return
         const remoteMeta = data.layoutJson && typeof data.layoutJson === 'object'
-          ? (data.layoutJson as StoredMeta)
+          ? (data.layoutJson as SeatLayoutDocument)
           : null
-        if (remoteMeta) {
-          if (Array.isArray(remoteMeta.categories) && remoteMeta.categories.length > 0) setCategories(remoteMeta.categories)
-          if (Array.isArray(remoteMeta.zones)) {
-            setZones(remoteMeta.zones)
-            if (remoteMeta.zones.length > 0) setActiveZoneId(remoteMeta.zones[0].id)
-          }
-          if (remoteMeta.background) setBackground(remoteMeta.background)
-          if (remoteMeta.seatZones && typeof remoteMeta.seatZones === 'object') {
-            storedSeatZones = remoteMeta.seatZones
-            setSeatZones(remoteMeta.seatZones)
-          }
-          if (remoteMeta.blockIds && typeof remoteMeta.blockIds === 'object') storedBlockIds = remoteMeta.blockIds
-          if (remoteMeta.stagePosition) setStagePosition(remoteMeta.stagePosition)
-        }
-        const mapped = ((data.seats ?? []) as ApiSeat[]).map(seatFromApi).map((s) => {
-          const key = seatKey(s)
-          const z = storedSeatZones[key]
-          const blockId = storedBlockIds[key]
-          return {
-            ...s,
-            zone: z ?? s.zone ?? null,
-            blockId: blockId ?? s.blockId ?? null,
-          }
-        })
-        setSeats(mapped)
-        persistedRef.current = new Set(persistedIds(mapped))
+        const rawCategories =
+          remoteMeta && Array.isArray(remoteMeta.categories) && remoteMeta.categories.length > 0
+            ? remoteMeta.categories
+            : DEFAULT_CATEGORIES
+        const loadedZones = remoteMeta && Array.isArray(remoteMeta.zones) ? remoteMeta.zones : []
+        const loadedBackground = remoteMeta?.background ?? DEFAULT_BACKGROUND
+        const mapped = (data.seats ?? []).map(seatFromApi)
+        // Koltukta tipi olup kategorisi olmayan salonlarda (eski veri, parket vb.)
+        // renkler ve fiyatlar griye düşmesin diye kategoriler tamamlanır.
+        const loadedCategories = ensureSeatCategories(rawCategories, mapped, true)
         const loadedStage = remoteMeta?.stage ?? {
           width: Number(data.stageWidth) || 1400,
           height: Number(data.stageHeight) || 900,
         }
+        const loadedStagePosition =
+          remoteMeta?.stagePosition ?? { x: Math.max(30, (loadedStage.width - 260) / 2), y: 35 }
+
+        setCategories(loadedCategories)
+        setZones(loadedZones)
+        if (loadedZones.length > 0) setActiveZoneId(loadedZones[0].id)
+        setBackground(loadedBackground)
+        setStagePosition(loadedStagePosition)
+        setSeats(mapped)
+        syncedRef.current = seatSyncMap(mapped)
+        aliasRef.current = new Map()
         setStage(loadedStage)
-        if (!remoteMeta?.stagePosition) {
-          setStagePosition({ x: Math.max(30, (loadedStage.width - 260) / 2), y: 35 })
-        }
-      } catch {
-        if (!cancelled) setMessage('Salon yüklenirken hata oluştu.')
+        savedLayoutRef.current = JSON.stringify({
+          categories: loadedCategories,
+          zones: loadedZones,
+          background: loadedBackground,
+          stage: loadedStage,
+          stagePosition: loadedStagePosition,
+        })
+        setDirty(false)
+      } catch (error) {
+        if (cancelled) return
+        setLoadError(error instanceof Error ? error.message : 'Salon yüklenirken hata oluştu.')
       } finally {
-        if (!cancelled) {
-          setLoading(false)
-          setMetaReady(true)
-        }
+        if (!cancelled) setLoading(false)
       }
     }
     void load()
     return () => {
       cancelled = true
     }
-  }, [hallId])
-
-  // Yerel metayı kaydet (yalnızca yükleme bittikten sonra).
-  useEffect(() => {
-    if (!hallId || !metaReady) return
-    try {
-      window.localStorage.setItem(
-        `seatmap-meta:${hallId}`,
-        JSON.stringify({
-          categories,
-          zones,
-          background,
-          seatZones,
-          blockIds: Object.fromEntries(
-            seats.filter((seat) => seat.blockId).map((seat) => [seatKey(seat), seat.blockId])
-          ),
-        })
-      )
-    } catch {
-      /* kota dolu olabilir, sessizce geç */
-    }
-  }, [hallId, metaReady, categories, zones, background, seatZones, seats])
+  }, [hallId, reloadKey])
 
   // ---- Mesaj otomatik gizle ----------------------------------------------
   useEffect(() => {
@@ -297,20 +304,73 @@ export default function SeatMapEditor({
     return () => clearTimeout(t)
   }, [message])
 
+  // ---- Otomatik kayıt -----------------------------------------------------
+  // Kullanıcı düzenlemeyi bıraktıktan sonra beklemeden plan veritabanına yazılır;
+  // kayıt sürerken yapılan yeni değişiklikler timers yeniden kurularak korunur.
+  useEffect(() => {
+    if (!hallId || !autosave || !dirty || loading || loadError || saving) return
+    if (pendingPlacement || pendingTemplate) return
+    const t = setTimeout(() => {
+      void saveRef.current?.({ automatic: true })
+    }, AUTOSAVE_DELAY_MS)
+    return () => clearTimeout(t)
+  }, [
+    hallId,
+    autosave,
+    dirty,
+    loading,
+    loadError,
+    saving,
+    pendingPlacement,
+    pendingTemplate,
+    seats,
+    categories,
+    zones,
+    background,
+    stage,
+    stagePosition,
+  ])
+
+  // ---- Kaydedilmemiş değişiklik varken sayfadan çıkma ---------------------
+  useEffect(() => {
+    if (!dirty && !saving) return
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [dirty, saving])
+
   // ---- Geçmiş (geri/ileri al) --------------------------------------------
+  const historyLimit = seats.length > 3000 ? 10 : 50
+
   const commit = (next: SeatItem[]) => {
-    setPast((p) => [...p.slice(-49), seats])
+    setPast((p) => pushBounded(p, seats, historyLimit))
     setFuture([])
     setSeats(next)
     setDirty(true)
+  }
+
+  /**
+   * Kayıt sonrası geçici id'ler veritabanı id'lerine döner. Geri/ileri alınan
+   * eski anlık görüntüler hâlâ geçici id taşıdığı için aynı eşleme uygulanır;
+   * aksi halde geri alınan koltuklar yeniden create edilip mükerrer olur.
+   */
+  const applyIdAliases = (snapshot: SeatItem[]) => {
+    if (aliasRef.current.size === 0) return snapshot
+    return snapshot.map((seat) => {
+      const realId = aliasRef.current.get(seat.id)
+      return realId ? { ...seat, id: realId } : seat
+    })
   }
 
   const undo = () => {
     if (past.length === 0) return
     const prev = past[past.length - 1]
     setPast(past.slice(0, -1))
-    setFuture([...future, seats])
-    setSeats(prev)
+    setFuture((f) => pushBounded(f, seats, historyLimit))
+    setSeats(applyIdAliases(prev))
     setDirty(true)
   }
 
@@ -318,8 +378,8 @@ export default function SeatMapEditor({
     if (future.length === 0) return
     const next = future[future.length - 1]
     setFuture(future.slice(0, -1))
-    setPast([...past, seats])
-    setSeats(next)
+    setPast((p) => pushBounded(p, seats, historyLimit))
+    setSeats(applyIdAliases(next))
     setDirty(true)
   }
 
@@ -335,14 +395,20 @@ export default function SeatMapEditor({
 
   const deleteSelected = () => {
     if (selected.size === 0) return
-    const ids = Array.from(selected).filter((id) => !seats.find((seat) => seat.id === id)?.locked)
+    // 10.000 koltukta seçim başına arama yapmamak için tek geçişte haritala.
+    const lockedIds = new Set(seats.filter((seat) => seat.locked).map((seat) => seat.id))
+    const ids = Array.from(selected).filter((id) => !lockedIds.has(id))
     if (ids.length === 0) {
       setMessage('Satılmış koltuklar silinemez.')
       return
     }
     const idSet = new Set(ids)
     const lockedCount = selected.size - ids.length
-    removeSeatZones(ids)
+    // Toplu silme geri alınamayacak kadar büyükse önce onay iste.
+    if (ids.length > 100) {
+      const ok = window.confirm(`${ids.length} koltuk silinecek. Onaylıyor musunuz?`)
+      if (!ok) return
+    }
     commit(seats.filter((s) => !idSet.has(s.id)))
     setSelected(new Set())
     // Seçili yay silindiğinde canlı önizleme aynı koltukları geri getirmesin.
@@ -351,24 +417,72 @@ export default function SeatMapEditor({
     setMessage(lockedCount > 0 ? `${ids.length} koltuk silindi; ${lockedCount} kilitli koltuk korundu.` : `${ids.length} koltuk silindi.`)
   }
 
-  const paintSeats = (ids: Iterable<string>, type: string) => {
+  const selectAllSeats = () => {
+    if (seats.length === 0) {
+      setMessage('Bu salonda henüz koltuk yok.')
+      return
+    }
+    setSelected(new Set(seats.map((seat) => seat.id)))
+    setMessage(`${seats.length} koltuk seçildi.`)
+  }
+
+  const paintSeats = (ids: Iterable<string>, categoryKey: string) => {
     const idSet = new Set(ids)
-    commit(seats.map((s) => (idSet.has(s.id) && !s.locked ? { ...s, type } : s)))
+    const category = categoryMap[categoryKey]
+    commit(
+      seats.map((s) => (idSet.has(s.id) && !s.locked ? applyCategory(s, category) : s))
+    )
+  }
+
+  /** Rezerve aracı: seçili/veriilen koltuklara durum uygular (satılmış koltuklar hariç). */
+  const applyStatusTo = (ids: Iterable<string>, status: StatusBrush) => {
+    const idSet = new Set(ids)
+    let touched = 0
+    const next = seats.map((s) => {
+      if (!idSet.has(s.id) || s.locked || s.status === status) return s
+      touched++
+      return { ...s, status }
+    })
+    if (touched === 0) return
+    commit(next)
+    setMessage(
+      status === 'held'
+        ? `${touched} koltuk tutuldu olarak işaretlendi.`
+        : status === 'unavailable'
+          ? `${touched} koltuk bloklandı.`
+          : `${touched} koltuk satışa açıldı.`
+    )
+  }
+
+  /** Seçili koltuklara kategorinin fiyatını ve bölüm adını yazar. */
+  const applyCategoryToSeats = (list: SeatItem[]): SeatItem[] =>
+    list.map((seat) => applyCategory(seat, categoryMap[seat.type]))
+
+  /** Verilen kimlikleri siler; satılmış koltuklara dokunmaz. */
+  const eraseSeats = (ids: Iterable<string>) => {
+    const idSet = new Set(ids)
+    let skipped = 0
+    const next = seats.filter((seat) => {
+      if (!idSet.has(seat.id)) return true
+      if (seat.locked) {
+        skipped++
+        return true
+      }
+      return false
+    })
+    const removed = seats.length - next.length
+    if (removed === 0) {
+      if (skipped > 0) setMessage('Satılmış koltuklar silinemez.')
+      return
+    }
+    commit(next)
+    setSelected(new Set())
+    setMessage(
+      removed + ' koltuk silindi' + (skipped > 0 ? `; ${skipped} satılmış koltuk korundu.` : '.')
+    )
   }
 
   // ---- Bölge (zone) -------------------------------------------------------
-  const removeSeatZones = (ids: string[]) => {
-    if (ids.length === 0) return
-    const idSet = new Set(ids)
-    const keys = seats.filter((s) => idSet.has(s.id)).map(seatKey)
-    if (keys.length === 0) return
-    setSeatZones((prev) => {
-      const next = { ...prev }
-      for (let i = 0; i < keys.length; i++) delete next[keys[i]]
-      return next
-    })
-  }
-
   const addZone = (name: string, color: string) => {
     const id = `zone-${Date.now().toString(36)}-${Math.floor(Math.random() * 1000)}`
     setZones((prev) => [...prev, { id, name, color }])
@@ -378,23 +492,12 @@ export default function SeatMapEditor({
   const removeZone = (id: string) => {
     setZones((prev) => prev.filter((z) => z.id !== id))
     if (activeZoneId === id) setActiveZoneId(null)
-    setSeatZones((prev) => {
-      const next: Record<string, string> = {}
-      for (const key of Object.keys(prev)) if (prev[key] !== id) next[key] = prev[key]
-      return next
-    })
     commit(seats.map((s) => (s.zone === id ? { ...s, zone: null } : s)))
   }
 
   const assignZoneToSelection = () => {
     if (!activeZoneId || selected.size === 0) return
     const zoneId = activeZoneId
-    const targets = seats.filter((s) => selected.has(s.id))
-    setSeatZones((prev) => {
-      const next = { ...prev }
-      for (let i = 0; i < targets.length; i++) next[seatKey(targets[i])] = zoneId
-      return next
-    })
     commit(seats.map((s) => (selected.has(s.id) ? { ...s, zone: zoneId } : s)))
     setMessage('Seçili koltuklar bölgeye atandı.')
   }
@@ -422,19 +525,26 @@ export default function SeatMapEditor({
 
   const clearSelectionZone = () => {
     if (selected.size === 0) return
-    removeSeatZones(Array.from(selected))
     commit(seats.map((s) => (selected.has(s.id) ? { ...s, zone: null } : s)))
   }
 
   // ---- Kategoriler & fiyat ------------------------------------------------
   const updateCategory = (key: string, patch: Partial<CategoryDef>) => {
+    const current = categoryMap[key]
     setCategories((prev) => prev.map((c) => (c.key === key ? { ...c, ...patch } : c)))
+    if (patch.price !== undefined || patch.label !== undefined) {
+      const next = current ? { ...current, ...patch } : undefined
+      commit(seats.map((s) => (s.type === key ? applyCategory(s, next) : s)))
+    }
     setDirty(true)
   }
 
   const addCategory = () => {
     const key = nextCategoryKey(categories)
-    const color = ADD_COLORS[categories.length % ADD_COLORS.length]
+    const used = new Set(categories.map((c) => c.color.toLowerCase()))
+    const color =
+      ADD_COLORS.find((c) => !used.has(c.toLowerCase())) ??
+      ADD_COLORS[categories.length % ADD_COLORS.length]
     setCategories((prev) => [
       ...prev,
       { key, label: 'Yeni Kategori', color, textColor: '#ffffff', price: 0 },
@@ -450,7 +560,17 @@ export default function SeatMapEditor({
     const fallbackKey = fallback.key
     setCategories((prev) => prev.filter((c) => c.key !== key))
     if (activeCategory === key) setActiveCategory(fallbackKey)
-    commit(seats.map((s) => (s.type === key ? { ...s, type: fallbackKey } : s)))
+    commit(seats.map((s) => (s.type === key ? applyCategory(s, fallback) : s)))
+  }
+
+  const pruneUnusedCategories = () => {
+    const used = new Set(seats.map((s) => s.type))
+    const kept = categories.filter((c) => used.has(c.key))
+    if (kept.length === 0 || kept.length === categories.length) return
+    setCategories(kept)
+    if (!used.has(activeCategory)) setActiveCategory(kept[0].key)
+    setDirty(true)
+    setMessage(`${categories.length - kept.length} kullanılmayan kategori kaldırıldı.`)
   }
 
   const categoryCounts = useMemo(() => {
@@ -487,12 +607,13 @@ export default function SeatMapEditor({
       centerY: arcCenter.y,
       type: activeCategory,
       startRowIndex: rowIndexAfter(seats),
-    }).map((seat) => ({
-      ...seat,
-      zone: activeZoneId ?? null,
-      blockId: 'preview-arc',
-    }))
-  }, [arcCenter, arcForm, activeCategory, seats])
+    }).map((seat) =>
+      applyCategory(
+        { ...seat, zone: activeZoneId ?? null, blockId: 'preview-arc' },
+        categoryMap[seat.type]
+      )
+    )
+  }, [arcCenter, arcForm, activeCategory, seats, categoryMap, activeZoneId])
 
   // Döndürme sürgüsü hareket ederken koltukları geçmişe yazmadan gösterir.
   const displaySeats = useMemo(() => {
@@ -519,25 +640,20 @@ export default function SeatMapEditor({
     const dy = snapToGrid(at.y - center.y)
     const fallbackBlockId = makeBlockId()
     const blockMap: Record<string, string> = {}
-    const placed = built.map((s) => {
-      const sourceBlock = s.blockId ?? '__template-single-block__'
-      if (!blockMap[sourceBlock]) blockMap[sourceBlock] = makeBlockId()
-      return {
-        ...s,
-        x: Math.round(s.x + dx),
-        y: Math.round(s.y + dy),
-        zone: activeZoneId ?? null,
-        blockId: blockMap[sourceBlock] ?? fallbackBlockId,
-      }
-    })
-    const overlaps = placed.filter((candidate) =>
-      seats.some((existing) =>
-        candidate.x < existing.x + existing.width &&
-        candidate.x + candidate.width > existing.x &&
-        candidate.y < existing.y + existing.height &&
-        candidate.y + candidate.height > existing.y
-      )
-    ).length
+    const placed = applyCategoryToSeats(
+      built.map((s) => {
+        const sourceBlock = s.blockId ?? '__template-single-block__'
+        if (!blockMap[sourceBlock]) blockMap[sourceBlock] = makeBlockId()
+        return {
+          ...s,
+          x: Math.round(s.x + dx),
+          y: Math.round(s.y + dy),
+          zone: activeZoneId ?? null,
+          blockId: blockMap[sourceBlock] ?? fallbackBlockId,
+        }
+      })
+    )
+    const overlaps = countOverlapsWith(placed)
     setPendingPlacement({ seats: placed, label: template.label, overlaps })
     setMessage(
       overlaps > 0
@@ -549,14 +665,6 @@ export default function SeatMapEditor({
   const confirmPlacement = () => {
     if (!pendingPlacement || pendingPlacement.overlaps > 0) return
     const placed = pendingPlacement.seats
-    const zoneId = activeZoneId
-    if (zoneId) {
-      setSeatZones((prev) => {
-        const next = { ...prev }
-        for (let i = 0; i < placed.length; i++) next[seatKey(placed[i])] = zoneId
-        return next
-      })
-    }
     commit([...seats, ...placed])
     setPendingPlacement(null)
     setMessage(`${pendingPlacement.label}: ${placed.length} koltuk eklendi.`)
@@ -579,16 +687,28 @@ export default function SeatMapEditor({
   }
 
   const clearAllSeats = () => {
+    // Satılmış koltuklar planı bozmaması için her zaman korunur.
+    const locked = seats.filter((seat) => seat.locked)
+    const removable = seats.length - locked.length
+    if (removable > 0) {
+      const ok = window.confirm(
+        `${removable} koltuk silinecek. Bu işlem geri alınabilir ama planınız boşalır. Onaylıyor musunuz?`
+      )
+      if (!ok) return
+    }
     // Gerçek koltukların yanında canlı yay/şablon önizlemesini de temizle.
-    setSeatZones({})
     setSelected(new Set())
     setArcCenter(null)
     setRotationPreview(null)
     setPendingTemplate(null)
     setPendingPlacement(null)
-    if (seats.length > 0) commit([])
-    else setDirty(true)
-    setMessage('Tüm koltuklar ve önizlemeler temizlendi.')
+    if (removable > 0) commit(locked)
+    else if (seats.length === 0) setDirty(true)
+    setMessage(
+      removable > 0
+        ? `${removable} koltuk silindi${locked.length > 0 ? `; ${locked.length} satılmış koltuk korundu` : ''}.`
+        : 'Bu salonda silinecek koltuk yok.'
+    )
   }
 
   // ---- Sıra döndürme ------------------------------------------------------
@@ -637,6 +757,8 @@ export default function SeatMapEditor({
           width: last.width,
           height: last.height,
           type: last.type,
+          price: last.price ?? null,
+          sectionId: last.sectionId ?? null,
           shape: last.shape,
           rotation: last.rotation,
           zone: last.zone ?? null,
@@ -650,23 +772,23 @@ export default function SeatMapEditor({
     setMessage(`${added.length} koltuk eklendi.`)
   }
 
-  const setSelectionStatus = (status: 'available' | 'held' | 'unavailable') => {
+  const setSelectionStatus = (status: StatusBrush) => {
     if (selected.size === 0) return
-    commit(seats.map((seat) => (selected.has(seat.id) ? { ...seat, status } : seat)))
-    setMessage(status === 'available' ? 'Koltuklar satışa açıldı.' : status === 'held' ? 'Koltuklar geçici olarak tutuldu.' : 'Koltuklar bloklandı.')
+    applyStatusTo(selected, status)
   }
 
   const handleCategoryChange = (key: string) => {
     setActiveCategory(key)
+    const category = categoryMap[key]
     if (selected.size === 0) return
-    commit(seats.map((seat) => (selected.has(seat.id) ? { ...seat, type: key } : seat)))
-    const category = categories.find((item) => item.key === key)
+    commit(seats.map((seat) => (selected.has(seat.id) ? applyCategory(seat, category) : seat)))
     setMessage(`${category?.label ?? key} kategorisi seçime uygulandı.`)
   }
 
   const applyCategoryToSelection = () => {
     if (selected.size === 0) return
-    commit(seats.map((seat) => (selected.has(seat.id) ? { ...seat, type: activeCategory } : seat)))
+    const category = categoryMap[activeCategory]
+    commit(seats.map((seat) => (selected.has(seat.id) ? applyCategory(seat, category) : seat)))
     setMessage(`${activeCategoryDef?.label ?? activeCategory} kategorisi seçime uygulandı.`)
   }
 
@@ -798,12 +920,17 @@ export default function SeatMapEditor({
 
     // Mevcut kimlikleri mümkün olduğunca koru; satır/koltuk sayısı artarsa yenilerini üret.
     const blockId = selectedSeats[0].blockId ?? makeBlockId()
-    const updated = generated.map((seat, index) => ({
-      ...seat,
-      id: index < selectedSeats.length ? selectedSeats[index].id : seat.id,
-      zone: selectedZone,
-      blockId,
-    }))
+    const updated = generated.map((seat, index) =>
+      applyCategory(
+        {
+          ...seat,
+          id: index < selectedSeats.length ? selectedSeats[index].id : seat.id,
+          zone: selectedZone,
+          blockId,
+        },
+        categoryMap[seat.type]
+      )
+    )
     const remaining = seats.filter((seat) => !selected.has(seat.id))
     setArcCenter(center)
     commit([...remaining, ...updated])
@@ -818,14 +945,6 @@ export default function SeatMapEditor({
     if (arcPreview.length === 0) return
     const blockId = makeBlockId()
     const withZone = arcPreview.map((seat) => ({ ...seat, blockId }))
-    if (activeZoneId) {
-      const zoneId = activeZoneId
-      setSeatZones((prev) => {
-        const next = { ...prev }
-        for (let i = 0; i < withZone.length; i++) next[seatKey(withZone[i])] = zoneId
-        return next
-      })
-    }
     commit([...seats, ...withZone])
     setArcCenter(null)
     setMessage(`${withZone.length} koltuk eklendi.`)
@@ -838,10 +957,21 @@ export default function SeatMapEditor({
   }
 
   // ---- Fare etkileşimleri -------------------------------------------------
-  const handleSeatPointerDown = (seat: SeatItem, world: WorldPoint) => {
+  /** Kutu seçimini başlatır; koltuğun üstünde başlayan sürükleme de kutu çizebilsin diye
+   *  koltuk ve arka plan indirme yollarının ikisinden de çağrılır. */
+  const beginMarquee = (
+    world: WorldPoint,
+    evt: ReactPointerEvent,
+    mode: 'select' | 'paint' | 'reserve' | 'erase'
+  ) => {
+    marqueeRef.current = { startWorld: world, additive: evt.shiftKey, mode }
+    setMarquee({ x: world.x, y: world.y, width: 0, height: 0 })
+  }
+
+  const handleSeatPointerDown = (seat: SeatItem, world: WorldPoint, evt: ReactPointerEvent) => {
     // Yay önizleme koltukları henüz gerçek listeye eklenmemiştir.
     if (arcPreview.some((preview) => preview.id === seat.id)) return
-    if (seat.locked && (tool === 'erase' || tool === 'paint')) {
+    if (seat.locked && (tool === 'erase' || tool === 'paint' || tool === 'reserve')) {
       setMessage('Satılmış koltuklar değiştirilemez.')
       return
     }
@@ -850,21 +980,47 @@ export default function SeatMapEditor({
       return
     }
     if (tool === 'erase') {
-      removeSeatZones([seat.id])
-      commit(seats.filter((s) => s.id !== seat.id))
+      eraseSeats([seat.id])
+      beginMarquee(world, evt, 'erase')
       return
     }
     if (tool === 'paint') {
       const targets: Iterable<string> =
         selected.has(seat.id) && selected.size > 1 ? selected : [seat.id]
       paintSeats(targets, activeCategory)
+      beginMarquee(world, evt, 'paint')
+      return
+    }
+    if (tool === 'reserve') {
+      // Shift ile seçili grup genişletilip tek seferde işaretlenebilir.
+      const targets: Iterable<string> =
+        selected.has(seat.id) && selected.size > 1 ? selected : [seat.id]
+      applyStatusTo(targets, statusBrush)
+      if (evt.shiftKey) selectSeats([seat.id], true)
+      beginMarquee(world, evt, 'reserve')
       return
     }
     if (tool !== 'select') return
 
+    const groupIds = seat.blockId
+      ? seats.filter((item) => item.blockId === seat.blockId).map((item) => item.id)
+      : [seat.id]
+
+    if (evt.shiftKey) {
+      // Shift: blok grubunu seçim listesine ekle veya çıkar.
+      const next = new Set(selected)
+      const alreadyIn = groupIds.every((id) => next.has(id))
+      for (const id of groupIds) {
+        if (alreadyIn) next.delete(id)
+        else next.add(id)
+      }
+      setSelected(next)
+      return
+    }
+
     let ids: Set<string>
     if (seat.blockId) {
-      ids = new Set(seats.filter((item) => item.blockId === seat.blockId).map((item) => item.id))
+      ids = new Set(groupIds)
     } else if (selected.has(seat.id)) {
       ids = new Set(selected)
     } else {
@@ -918,7 +1074,7 @@ export default function SeatMapEditor({
         rotation: 0,
         zone: activeZoneId ?? null,
       }
-      commit([...seats, newSeat])
+      commit([...seats, applyCategory(newSeat, categoryMap[activeCategory])])
       setMessage('Koltuk eklendi.')
       return
     }
@@ -927,6 +1083,7 @@ export default function SeatMapEditor({
       const generated = generateRows({
         ...rowForm,
         blocks: parseBlockPattern(rowForm.blockPattern),
+        rowSeatCounts: parsePerRowPattern(rowForm.perRowPattern),
         numbering: rowForm.numbering,
         numberDirection: rowForm.numberDirection,
         startNumber: rowForm.startNumber,
@@ -939,15 +1096,8 @@ export default function SeatMapEditor({
         ? generated.map((s) => ({ ...s, zone: activeZoneId }))
         : generated
       const blockId = makeBlockId()
-      const blockSeats = withZone.map((seat) => ({ ...seat, blockId }))
-      const overlaps = blockSeats.filter((candidate) =>
-        seats.some((existing) =>
-          candidate.x < existing.x + existing.width &&
-          candidate.x + candidate.width > existing.x &&
-          candidate.y < existing.y + existing.height &&
-          candidate.y + candidate.height > existing.y
-        )
-      ).length
+      const blockSeats = applyCategoryToSeats(withZone.map((seat) => ({ ...seat, blockId })))
+      const overlaps = countOverlapsWith(blockSeats)
       setPendingPlacement({ seats: blockSeats, label: 'Satır bloğu', overlaps })
       setMessage(
         overlaps > 0
@@ -957,11 +1107,10 @@ export default function SeatMapEditor({
       return
     }
 
-    if (tool === 'select') {
+    if (tool === 'select' || tool === 'paint' || tool === 'reserve' || tool === 'erase') {
       const additive = evt.shiftKey
-      if (!additive) setSelected(new Set())
-      marqueeRef.current = { startWorld: world, additive }
-      setMarquee({ x: world.x, y: world.y, width: 0, height: 0 })
+      if (tool === 'select' && !additive) setSelected(new Set())
+      beginMarquee(world, evt, tool)
     }
   }
 
@@ -972,7 +1121,7 @@ export default function SeatMapEditor({
       const dy = world.y - drag.startWorld.y
       if (!drag.moved && (Math.abs(dx) > 2 || Math.abs(dy) > 2)) {
         drag.moved = true
-        setPast((p) => [...p.slice(-49), drag.snapshot])
+        setPast((p) => pushBounded(p, drag.snapshot, historyLimit))
         setFuture([])
       }
       if (drag.moved) {
@@ -1003,14 +1152,28 @@ export default function SeatMapEditor({
     }
   }
 
-  const handlePointerUpWorld = () => {
+  const handlePointerUpWorld = (world: WorldPoint) => {
     const mq = marqueeRef.current
-    if (mq && marquee) {
-      const hit = seatsInRect(seats, marquee)
-      selectSeats(
-        hit.map((s) => s.id),
-        mq.additive
-      )
+    if (mq) {
+      // Bırakma anındaki konum kullanılır; kare başına güncellenen state geride kalabilir.
+      const rect = {
+        x: Math.min(mq.startWorld.x, world.x),
+        y: Math.min(mq.startWorld.y, world.y),
+        width: Math.abs(world.x - mq.startWorld.x),
+        height: Math.abs(world.y - mq.startWorld.y),
+      }
+      // Koltuğun üstünde başlayan kutu tek tıkla bittiyse fırça indirme anında
+      // zaten uygulandı; kutuyu bir kez daha uygulamak ikinci bir geri al adımı açar.
+      const isClick = rect.width <= 1 && rect.height <= 1
+      const ids = indexRectHits(seatIndex, rect).map((s) => s.id)
+      if (mq.mode === 'select') {
+        selectSeats(ids, mq.additive)
+      } else if (ids.length > 0 && !isClick) {
+        // Sürüklemenin hangi araca ait olduğu araç değişse bile korunur.
+        if (mq.mode === 'paint') paintSeats(ids, activeCategory)
+        else if (mq.mode === 'reserve') applyStatusTo(ids, statusBrush)
+        else eraseSeats(ids)
+      }
     }
     marqueeRef.current = null
     setMarquee(null)
@@ -1030,8 +1193,8 @@ export default function SeatMapEditor({
   }, [])
 
   // ---- Klavye kısayolları -------------------------------------------------
-  const actionsRef = useRef({ undo, redo, deleteSelected })
-  actionsRef.current = { undo, redo, deleteSelected }
+  const actionsRef = useRef({ undo, redo, deleteSelected, selectAllSeats })
+  actionsRef.current = { undo, redo, deleteSelected, selectAllSeats }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -1045,6 +1208,9 @@ export default function SeatMapEditor({
       } else if (mod && e.key.toLowerCase() === 'y') {
         e.preventDefault()
         actionsRef.current.redo()
+      } else if (mod && e.key.toLowerCase() === 'a') {
+        e.preventDefault()
+        actionsRef.current.selectAllSeats()
       } else if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault()
         actionsRef.current.deleteSelected()
@@ -1082,6 +1248,13 @@ export default function SeatMapEditor({
     const file = event.target.files?.[0]
     event.target.value = ''
     if (!file) return
+    if (seats.length > 0) {
+      const ok = window.confirm(
+        `İçe aktarma mevcut plandaki ${seats.length} koltuğun yerini alır. Devam edilsin mi?`
+      )
+      if (!ok) return
+    }
+    const previousSeats = seats
     const reader = new FileReader()
     reader.onload = () => {
       try {
@@ -1090,14 +1263,17 @@ export default function SeatMapEditor({
         const importedSeats = parsed.seats.map((raw) => {
           const value = raw as Partial<SeatItem> & { id?: string }
           return {
-            id: value.id || makeSeatId(),
+            // Dosyadaki id'ler bu salona ait olmayabilir; hepsi yeni koltuk olarak eklenir.
+            id: makeSeatId(),
             row: String(value.row ?? ''),
             number: String(value.number ?? ''),
             x: Number(value.x) || 0,
             y: Number(value.y) || 0,
             width: Math.max(8, Number(value.width) || 26),
             height: Math.max(8, Number(value.height) || 26),
-            type: String(value.type || 'NORMAL'),
+            type: String(value.type || 'CATEGORY_1'),
+            price: Number.isFinite(value.price as number) ? (value.price as number) : null,
+            sectionId: value.sectionId ?? null,
             shape: value.shape === 'rect' ? 'rect' : 'circle',
             rotation: Number(value.rotation) || 0,
             zone: value.zone ?? null,
@@ -1109,8 +1285,15 @@ export default function SeatMapEditor({
           ? parsed.categories.filter((item): item is CategoryDef => Boolean(item && typeof item === 'object'))
           : categories
         const importedZones = Array.isArray(parsed.zones) ? parsed.zones : zones
-        setSeats(importedSeats)
-        setCategories(importedCategories.length > 0 ? importedCategories : DEFAULT_CATEGORIES)
+        const nextCategories = ensureSeatCategories(
+          importedCategories.length > 0 ? importedCategories : DEFAULT_CATEGORIES,
+          importedSeats,
+          true,
+        )
+        const importedMap = buildCategoryMap(nextCategories)
+        // Fiyat ve bölüm adı her zaman kategori listesinden türetilir.
+        setSeats(importedSeats.map((seat) => applyCategory(seat, importedMap[seat.type])))
+        setCategories(nextCategories)
         setZones(importedZones as ZoneDef[])
         if (parsed.stage && typeof parsed.stage === 'object') {
           const nextStage = parsed.stage as { width?: number; height?: number }
@@ -1122,10 +1305,11 @@ export default function SeatMapEditor({
         }
         if (parsed.background) setBackground(parsed.background)
         setSelected(new Set())
-        setPast([])
+        // Dışa aktarılan plan tek adımda geri alınabilir.
+        setPast([previousSeats])
         setFuture([])
         setDirty(true)
-        setMessage(`${importedSeats.length} koltuk içe aktarıldı.`)
+        setMessage(`${importedSeats.length} koltuk içe aktarıldı. (Geri almak için Ctrl+Z)`)
       } catch {
         setMessage('Geçersiz JSON. Salon değiştirilmedi.')
       }
@@ -1134,26 +1318,51 @@ export default function SeatMapEditor({
   }
 
   // ---- Kaydet -------------------------------------------------------------
-  const handleSave = async () => {
+  /** Kayıttan sonra planda veritabanından farklı bir şey kaldı mı? */
+  const computeDirty = () => {
+    const current = stateRef.current
+    const layoutChanged =
+      JSON.stringify({
+        categories: current.categories,
+        zones: current.zones,
+        background: current.background,
+        stage: current.stage,
+        stagePosition: current.stagePosition,
+      }) !== savedLayoutRef.current
+    return layoutChanged || hasUnsavedSeats(current.seats, syncedRef.current)
+  }
+
+  const handleSave = async (options?: { automatic?: boolean }) => {
     if (!hallId) {
       setDirty(false)
       setMessage('Deneme modunda kayıt yapılmaz.')
       return
     }
+    if (savingRef.current) return
+    // Otomatik kayıt sırasında kullanıcının yaptığı yeni değişiklik sessizce
+    // düşmesin: kayıt bitince tekrar zamanlanır.
+    const automatic = Boolean(options?.automatic)
+    if (automatic && !dirty) return
+    savingRef.current = true
     setSaving(true)
+    setSaveError(null)
     try {
       const currentIds = new Set(seats.map((s) => s.id))
-      const savedBlockIds: Record<string, string> = {}
-      for (let i = 0; i < seats.length; i++) {
-        if (seats[i].blockId) savedBlockIds[seatKey(seats[i])] = seats[i].blockId as string
+      const deletedSeatIds = Array.from(syncedRef.current.keys()).filter((id) => !currentIds.has(id))
+      // Yalnız veritabanındaki imzasından farklı olan koltuklar gönderilir;
+      // 10.000 koltukluk salonda tek bir değişiklik tüm listayı yeniden yazdırmaz.
+      const dirty: SeatItem[] = []
+      let hasNewSeat = false
+      for (const seat of seats) {
+        const signature = seatSignature(seat)
+        if (syncedRef.current.get(seat.id) === signature) continue
+        dirty.push(seat)
+        if (!isPersistedId(seat.id)) hasNewSeat = true
       }
-      const deletedSeatIds = Array.from(persistedRef.current).filter((id) => !currentIds.has(id))
-      const layoutDocument: StoredMeta = {
+      const layoutDocument: SeatLayoutDocument = {
         categories,
         zones,
         background,
-        seatZones,
-        blockIds: savedBlockIds,
         stage,
         stagePosition,
       }
@@ -1161,39 +1370,109 @@ export default function SeatMapEditor({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          seats: seats.map(seatToPayload),
+          seats: dirty.map(seatToPayload),
           deletedSeatIds,
           layout: layoutDocument,
+          response: 'summary',
+          mode: hasNewSeat ? 'full' : 'partial',
         }),
       })
       const data = await res.json().catch(() => null)
       if (!res.ok) {
-        throw new Error(data?.error || data?.details || `Kayıt başarısız (${res.status})`)
+        const base = data?.error || `Kayıt başarısız (${res.status})`
+        throw new Error(data?.details ? `${base} — ${data.details}` : base)
       }
-      // Bölgeler veritabanında tutulmuyor; satır+numara üzerinden geri uygula.
-      const mapped = ((data.seats ?? []) as ApiSeat[]).map(seatFromApi).map((s) => {
-        const key = seatKey(s)
-        const z = seatZones[key]
-        const blockId = savedBlockIds[key]
-        return {
-          ...s,
-          zone: z ?? s.zone ?? null,
-          blockId: blockId ?? s.blockId ?? null,
+
+      if (data?.responseMode !== 'summary') {
+        const mapped = ((data?.seats ?? []) as ApiSeat[]).map(seatFromApi)
+        setSeats(mapped)
+        syncedRef.current = seatSyncMap(mapped)
+        setSelected(new Set())
+        setPast([])
+        setFuture([])
+        setDirty(false)
+        setMessage('Salon kaydedildi.')
+        return
+      }
+
+      // Özet yanıt: tüm liste sunucudan gelmez, yerel liste değişenlerle
+      // birleştirilir. 10.000 koltukta yeniden boyama yerine tek geçiş olur.
+      const locked = new Set<string>((data.lockedSeatIds ?? []) as string[])
+      const dirtyIds = new Set(dirty.map((seat) => seat.id))
+      const createdById = new Map<string, { id: string; row: string; number: string }>(
+        ((data.createdSeats ?? []) as { tempId: string; id: string; row: string; number: string }[]).map((c) => [
+          c.tempId,
+          c,
+        ])
+      )
+      const revertedById = new Map<string, { row: string; number: string }>(
+        ((data.reverted ?? []) as { id: string; row: string; number: string }[]).map((r) => [r.id, r])
+      )
+      let changed = 0
+      const merged: SeatItem[] = seats.map((seat) => {
+        // Kısmi kayıtta satılmış koltuk listesi yalnız gönderilenleri kapsar.
+        if (data.mode === 'partial' && !dirtyIds.has(seat.id)) return seat
+        const created = createdById.get(seat.id)
+        const reverted = revertedById.get(seat.id)
+        const id = created ? created.id : seat.id
+        const row = created ? created.row : reverted ? reverted.row : seat.row
+        const number = created ? created.number : reverted ? reverted.number : seat.number
+        if (id === seat.id && row === seat.row && number === seat.number && seat.locked === locked.has(id)) {
+          return seat
         }
+        changed++
+        return { ...seat, id, row, number, locked: locked.has(id) }
       })
-      setSeats(mapped)
-      persistedRef.current = new Set(persistedIds(mapped))
+      const revived = ((data.keptDeletedSeats ?? []) as ApiSeat[]).map(seatFromApi)
+      // Kısmi kayıtta gönderilmeyen koltuklar yerel listedir; silinmiş sayılıp
+      // geri gelen satılmış koltuklar yeniden eklenince mükerrer olur.
+      const revivedIds = new Set(revived.map((seat) => seat.id))
+      const kept = revived.length > 0 ? merged.filter((seat) => !revivedIds.has(seat.id)) : merged
+
+      const nextSynced = new Map(syncedRef.current)
+      for (const id of deletedSeatIds) nextSynced.delete(id)
+      for (const seat of dirty) {
+        const created = createdById.get(seat.id)
+        const reverted = revertedById.get(seat.id)
+        const id = created ? created.id : seat.id
+        const signed = reverted ? { ...seat, row: reverted.row, number: reverted.number } : seat
+        nextSynced.set(id, seatSignature(signed))
+      }
+      for (const seat of revived) nextSynced.set(seat.id, seatSignature(seat))
+      syncedRef.current = nextSynced
+      savedLayoutRef.current = JSON.stringify(layoutDocument)
+      createdById.forEach((created, tempId) => aliasRef.current.set(tempId, created.id))
+
+      if (changed > 0 || revived.length > 0) {
+        setSeats(revived.length > 0 ? [...kept, ...revived] : merged)
+      }
       setSelected(new Set())
-      setPast([])
-      setFuture([])
-      setDirty(false)
-      setMessage('Salon kaydedildi.')
+      // Kayıt sürerken yapılan düzenlemeler kaybolmasın: kirliliği yeniden say.
+      const remaining = computeDirty()
+      setDirty(remaining)
+      setSavedAt(Date.now())
+      const conflictCount = ((data.keyConflicts ?? []) as unknown[]).length
+      if (!automatic) {
+        setMessage(
+          remaining
+            ? 'Kaydedildi, planda kaydedilmemiş değişiklik var.'
+            : conflictCount > 0
+              ? `Salon kaydedildi. ${conflictCount} koltuğun satır/numarası, aynı numarayı kullanan başka koltuk olduğu için çakışmayacak şekilde düzenlendi.`
+              : revertedById.size > 0 || revived.length > 0
+                ? 'Salon kaydedildi. Satılan koltukların yeri ve numarası korunur.'
+                : 'Salon kaydedildi.'
+        )
+      }
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Kayıt sırasında hata oluştu.')
+      const text = error instanceof Error ? error.message : 'Kayıt sırasında hata oluştu.'
+      setSaveError(text)
     } finally {
+      savingRef.current = false
       setSaving(false)
     }
   }
+
+  saveRef.current = handleSave
 
 const chart: ChartDoc = useMemo(
     () => ({
@@ -1227,10 +1506,40 @@ const chart: ChartDoc = useMemo(
     [seats, selectedBlockId]
   )
 
+  // Rozet yalnızca son kayıt saatini taşır; kirlilik ve kayıt durumu zaten
+  // soldaki uyarıda ve Kaydet düğmesinde görünüyor.
+  const autosaveLabel = !dirty && !saving && savedAt ? `Son kayıt ${new Date(savedAt).toLocaleTimeString('tr-TR')}` : ''
+
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center text-sm text-slate-500">
         Yükleniyor…
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-3 bg-slate-50 px-6 text-center">
+        <p className="text-sm font-semibold text-red-700">{loadError}</p>
+        <p className="max-w-sm text-xs leading-relaxed text-slate-500">
+          Salon planı sunucudan alınamadı; düzenleme yapmadan önce bağlantıyı ve oturumu kontrol edin.
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setReloadKey((key) => key + 1)}
+            className="rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-700"
+          >
+            Tekrar dene
+          </button>
+          <Link
+            href="/organizer/halls"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Salon listesine dön
+          </Link>
+        </div>
       </div>
     )
   }
@@ -1243,6 +1552,8 @@ const chart: ChartDoc = useMemo(
         categories={categories}
         activeCategory={activeCategory}
         onCategoryChange={handleCategoryChange}
+        statusBrush={statusBrush}
+        onStatusBrushChange={setStatusBrush}
         showLabels={showLabels}
         onToggleLabels={setShowLabels}
         canUndo={past.length > 0}
@@ -1250,13 +1561,30 @@ const chart: ChartDoc = useMemo(
         onUndo={undo}
         onRedo={redo}
         selectionCount={selected.size}
+        onSelectAll={selectAllSeats}
         onDeleteSelected={deleteSelected}
-        onSave={handleSave}
+        onSave={() => void handleSave()}
         saving={saving}
         dirty={dirty}
+        autosave={autosave}
+        onAutosaveChange={setAutosave}
+        autosaveLabel={autosaveLabel}
         onExportJson={exportJson}
         onImportJson={() => jsonInputRef.current?.click()}
       />
+      {saveError ? (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-red-200 bg-red-50 px-4 py-2 text-xs text-red-800">
+          <span>Kayıt edilemedi: {saveError}</span>
+          <button
+            type="button"
+            onClick={() => void handleSave()}
+            disabled={saving}
+            className="rounded-md border border-red-300 bg-white px-2.5 py-1 font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
+          >
+            Yeniden dene
+          </button>
+        </div>
+      ) : null}
       <input
         ref={jsonInputRef}
         type="file"
@@ -1464,6 +1792,20 @@ const chart: ChartDoc = useMemo(
                     className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-xs"
                   />
                 </label>
+                <label className="block text-xs text-slate-600">
+                  Satır bazında koltuk
+                  <input
+                    value={rowForm.perRowPattern}
+                    onChange={(e) => setRowForm({ ...rowForm, perRowPattern: e.target.value })}
+                    placeholder="Örn. 28,26,24"
+                    className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-xs"
+                  />
+                  <span className="mt-1 block text-[10px] leading-4 text-slate-500">
+                    Her satıra kaç koltuk düşeceğini aralıkla yaz. Bu alan doluyken yukarıdaki
+                    satır ve koltuk/satır değerleri geçersiz kalır; blok düzeni yazıldıysa
+                    koltuklar koridorlara oranla paylaştırılır.
+                  </span>
+                </label>
                 <button
                   type="button"
                   onClick={copySelectedRowPattern}
@@ -1545,6 +1887,16 @@ const chart: ChartDoc = useMemo(
             </div>
           ) : null}
 
+          {(tool === 'reserve' || tool === 'paint' || tool === 'erase') ? (
+            <div className="pointer-events-none absolute left-1/2 top-4 -translate-x-1/2 rounded-lg bg-slate-900 px-4 py-2 text-xs font-medium text-white shadow-lg">
+              {tool === 'reserve'
+                ? `Rezerve aracı: tıkla veya sürükleyerek kutu çiz (${STATUS_BRUSH_LABEL[statusBrush]})`
+                : tool === 'paint'
+                  ? 'Boya aracı: tıkla veya sürükleyerek kutu çiz'
+                  : 'Silme aracı: tıkla veya sürükleyerek kutu çiz'}
+            </div>
+          ) : null}
+
           {message ? (
             <div className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 rounded-lg bg-slate-900 px-4 py-2 text-xs font-medium text-white shadow-lg">
               {message}
@@ -1586,6 +1938,7 @@ const chart: ChartDoc = useMemo(
             onUpdateCategory={updateCategory}
             onAddCategory={addCategory}
             onRemoveCategory={removeCategory}
+            onPruneUnusedCategories={pruneUnusedCategories}
             categoryCounts={categoryCounts}
             background={background}
             onBackgroundChange={changeBackground}
@@ -1660,6 +2013,16 @@ function parseBlockPattern(value: string): number[] | undefined {
     .filter((count) => Number.isFinite(count) && count > 0)
     .map((count) => Math.floor(count))
   return blocks.length > 1 ? blocks : undefined
+}
+
+/** Satır bazlı koltuk adetlerini okur: "28,26,24" veya "28;26;24". */
+function parsePerRowPattern(value: string): number[] | undefined {
+  const counts = value
+    .split(/[;,\s]+/)
+    .filter((part) => part.trim() !== '')
+    .map((part) => Number(part.trim()))
+    .map((count) => (Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0))
+  return counts.length > 0 ? counts : undefined
 }
 
 /** Seçili satırdaki büyük yatay boşlukları koridor olarak algılar. */

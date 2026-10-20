@@ -7,8 +7,12 @@ import {
   getAuthSecretForSession,
   SESSION_MAX_AGE_SEC,
 } from '@/lib/auth'
+import { rateLimit, tooManyRequests } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
+
+const SIGNIN_LIMIT = 15
+const SIGNIN_WINDOW_MS = 15 * 60 * 1000
 
 function sameOriginOk(request: Request): boolean {
   const origin = request.headers.get('origin')
@@ -31,6 +35,14 @@ export async function POST(request: Request) {
     body = await request.json()
   } catch {
     return NextResponse.json({ error: 'Geçersiz istek' }, { status: 400 })
+  }
+
+  const rawEmail = typeof body.email === 'string' ? body.email : ''
+  const email = rawEmail.trim().toLowerCase()
+  const ip = (request.headers.get('x-forwarded-for')?.split(',')[0] ?? '').trim() || 'unknown'
+  const limit = rateLimit(`signin:${ip}:${email}`, SIGNIN_LIMIT, SIGNIN_WINDOW_MS)
+  if (!limit.ok) {
+    return tooManyRequests(limit.retryAfterSec, 'Çok fazla giriş denemesi yaptınız. Biraz sonra tekrar deneyin.')
   }
 
   try {

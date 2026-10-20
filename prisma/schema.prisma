@@ -56,9 +56,20 @@ model Organizer {
   approvedAt      DateTime?
   approvedBy      String?
   rejectionReason String?
+
+  /// Admin onayında belirlenen para modeli; etkinliklerde varsayılan olur
+  commissionType  String?
+  commissionValue Float?
+
+  /// Onay sonrası organizatörün yeni para modeli talebi; doluysa admin kararı beklenir
+  commissionRequestType  String?
+  commissionRequestValue Float?
+  commissionRequestNote  String?
+  commissionRequestedAt  DateTime?
   
   halls           Hall[]
   events          Event[]
+  ticketCheckers  TicketChecker[]
   
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
@@ -74,12 +85,16 @@ model TicketChecker {
   phone     String
   /// PENDING | APPROVED | REJECTED | SUSPENDED
   status    String  @default("PENDING")
+  /// Kontrolör yalnız bu organizatörün etkinliklerinde bilet okuyabilir; admin atar
+  organizerId String?
+  organizer   Organizer? @relation(fields: [organizerId], references: [id], onDelete: SetNull)
   approvedAt   DateTime?
   approvedBy   String?
   rejectionReason String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([organizerId])
   @@map("ticket_checkers")
 }
 
@@ -195,6 +210,8 @@ model Event {
   commissionLocked Boolean  @default(false)
   commissionSetAt DateTime?
   commissionSetBy String?
+  /// Organizatör etkinliğin kurdevents.com'da da çıkmasını istiyor; kararı admin verir
+  publishComRequested Boolean @default(false)
   rejectionReason String?
 
   /// Senkronizasyon durumu: kurdevents.com satış veritabanındaki karşılıklar
@@ -265,6 +282,15 @@ model Order {
   paymentMethod   String?
   paymentStatus   String    @default("PENDING")
   paidAt          DateTime?
+  stripeSessionId      String?  @unique
+  stripePaymentIntentId String?
+  /// Ödenmemiş siparişin iptal tarihi; stok bu saatten sonra serbest bırakılır
+  expiresAt       DateTime?
+
+  /// İade kaydı — para Stripe üzerinden geçtiyse refund id'si saklanır
+  refundedAt      DateTime?
+  refundReason    String?
+  stripeRefundId  String?
   
   tickets     Ticket[]
   
@@ -277,6 +303,8 @@ model Order {
 model Ticket {
   id          String    @id @default(cuid())
   ticketNumber String   @unique
+  /// Kapıda okutulacak kısa kod (QR payload'ı bunu taşır)
+  code        String?   @unique
   
   orderId     String
   order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)

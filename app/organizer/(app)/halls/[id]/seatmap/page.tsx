@@ -1,6 +1,5 @@
 'use client'
-// Yeni nesil salon planı editörü sayfası (v1).
-// Mevcut /svg-editor rotası korunur; bu sayfa yeni SeatMapEditor bileşenini kullanır.
+// Salon planı editörü — tek düzenleme yolu.
 
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
