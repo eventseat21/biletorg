@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.env
+.env.local
+.env.*.local
+*.log
+scratch-*
+public/uploads
+backups
+docs
+dev-server.log
+Dockerfile
+.dockerignore
+README.md
