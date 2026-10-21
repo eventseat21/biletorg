@@ -59,18 +59,29 @@ export default async function EventsPage() {
                 href={`/events/${event.slug}`}
                 className="card hover:shadow-md transition-shadow overflow-hidden group"
               >
-                <div className="h-48 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+                <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
                   {event.image ? (
-                    <Image
-                      src={event.image}
-                      alt={event.title}
-                      width={640}
-                      height={360}
-                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      className="w-full h-full object-cover"
-                    />
+                    <>
+                      <Image
+                        src={event.image}
+                        alt=""
+                        aria-hidden
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="scale-110 object-cover opacity-40 blur-xl"
+                      />
+                      <Image
+                        src={event.image}
+                        alt={event.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-contain"
+                      />
+                    </>
                   ) : (
-                    <Calendar className="w-16 h-16 text-primary-400" />
+                    <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary-100 to-primary-200">
+                      <Calendar className="w-16 h-16 text-primary-400" />
+                    </div>
                   )}
                 </div>
                 <div className="p-6">

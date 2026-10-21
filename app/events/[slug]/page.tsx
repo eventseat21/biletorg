@@ -82,9 +82,12 @@ export default async function PublicEventPage({
       <main className="mx-auto max-w-5xl px-4 pb-32 pt-24 md:pb-16 md:pt-28">
         <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_340px] md:gap-8">
           <div className="min-w-0">
-            <div className={`relative w-full max-w-md overflow-hidden rounded-md bg-gray-100 ${event.image ? 'aspect-square' : 'h-40'}`}>
+            <div className={`relative w-full max-w-md overflow-hidden rounded-md bg-gray-100 ${event.image ? 'aspect-[4/5]' : 'h-40'}`}>
               {event.image ? (
-                <Image src={event.image} alt={event.title} fill sizes="(max-width: 768px) 100vw, 448px" className="object-cover" />
+                <>
+                  <Image src={event.image} alt="" aria-hidden fill sizes="(max-width: 768px) 100vw, 448px" className="scale-110 object-cover opacity-40 blur-xl" />
+                  <Image src={event.image} alt={event.title} fill sizes="(max-width: 768px) 100vw, 448px" className="object-contain" />
+                </>
               ) : (
                 <span className="flex h-full items-center justify-center">
                   <Ticket className="h-12 w-12 text-gray-300" />
