@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 
-const FORM_RECIPIENT_EMAIL = 'eventseat21@gmail.com'
+const FORM_RECIPIENT_EMAIL = process.env.FORM_RECIPIENT_EMAIL || 'destek@kurdevents.org'
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,14 +32,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const port = parseInt(process.env.SMTP_PORT || '587')
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false,
+      host: process.env.SMTP_HOST,
+      port,
+      secure: port === 465,
       auth: {
-        user: process.env.SMTP_USER || FORM_RECIPIENT_EMAIL,
-        pass: process.env.SMTP_PASS?.replace(/\s/g, '') || 'your-app-password'
-      }
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS?.replace(/\s/g, ''),
+      },
     })
 
     // Generate ticket number
