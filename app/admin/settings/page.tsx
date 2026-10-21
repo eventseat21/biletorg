@@ -18,10 +18,11 @@ export default function AdminSettingsPage() {
       </div>
       <div className="bg-white rounded-xl border border-gray-200 p-6 text-gray-600 text-sm">
         <ul className="list-disc pl-5 space-y-2">
-          <li>Komisyon oranı: ortam değişkeni <code className="bg-gray-100 px-1 rounded">PLATFORM_COMMISSION_PERCENTAGE</code></li>
-          <li>E-posta (SMTP): <code className="bg-gray-100 px-1 rounded">SMTP_*</code> değişkenleri</li>
+          <li>Komisyon oranı: organizatör anlaşması (yüzde veya bilet başına ücret), Organizatörler ekranından</li>
+          <li>E-posta (SMTP): <code className="bg-gray-100 px-1 rounded">SMTP_*</code> ve{' '}
+            <code className="bg-gray-100 px-1 rounded">FORM_RECIPIENT_EMAIL</code> değişkenleri</li>
           <li>NextAuth: <code className="bg-gray-100 px-1 rounded">NEXTAUTH_URL</code> ve{' '}
-            <code className="bg-gray-100 px-1 rounded">NEXTAUTH_SECRET</code> Vercel’de tanımlı olmalı</li>
+            <code className="bg-gray-100 px-1 rounded">NEXTAUTH_SECRET</code> Coolify’da tanımlı olmalı</li>
         </ul>
       </div>
     </div>

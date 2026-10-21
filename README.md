@@ -52,11 +52,11 @@ npm install
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/biletorg?schema=public"
 NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="your-secret-key"
-SMTP_HOST="smtp.gmail.com"
+SMTP_HOST="mail.kurdevents.org"
 SMTP_PORT="587"
-SMTP_USER="your-email@gmail.com"
-SMTP_PASS="your-app-password"
-PLATFORM_COMMISSION_PERCENTAGE="5"
+SMTP_USER="destek@kurdevents.org"
+SMTP_PASS="your-mailbox-password"
+FORM_RECIPIENT_EMAIL="destek@kurdevents.org"
 ```
 
 ### 3. Veritabanını Kur
